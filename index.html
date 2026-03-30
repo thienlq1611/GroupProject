@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare Pharmacy — Staff Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-logo"><span>Pharmacy Database</span> <span class="nav-portal-tag">Staff Portal</span></div>
+        <ul class="nav-links">
+            <li><a href="#patients">Patients</a></li>
+            <li><a href="#prescriptions">Prescriptions</a></li>
+            <li><a href="#dispensing">Dispensing</a></li>
+            <li><a href="#inventory">Inventory</a></li>
+            <li><a href="#reports">Reports &amp; Admin</a></li>
+            <li><a href="patient.html" class="nav-patient-link">&larr; Patient Portal</a></li>
+            <li><a href="#">Log Out</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero">
+        <h1>Staff Portal</h1>
+        <p>Manage patients, prescriptions, dispensing, and inventory — for authorized pharmacy staff only.</p>
+    </section>
+
+    <main class="staff-grid">
+
+        <!-- ── PATIENTS ───────────────────────────────────────── -->
+        <div class="staff-col" id="patients">
+            <div class="col-header">Patients</div>
+
+            <!-- Find Patient -->
+            <div class="query-card">
+                <div class="query-header"><h2>Find Patient</h2></div>
+                <p class="query-desc">Search by patient ID, PHN, last name, or date of birth. All fields are optional — fill in any combination.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="patient-name">Full Name or Last Name</label>
+                        <input type="text" id="patient-name" placeholder="e.g. Maniscalco">
+                    </div>
+                    <div class="form-group">
+                        <label for="dob">Date of Birth</label>
+                        <input type="date" id="dob">
+                    </div>
+                    <div class="form-group">
+                        <label for="address">City</label>
+                        <input type="text" id="address" placeholder="e.g. Vancouver, Oakville">
+                    </div>
+                    <button type="submit" class="btn-query">Search Patients</button>
+                </form>
+                <div class="result-placeholder"><span>Results will appear here</span></div>
+            </div>
+
+            <!-- Verify Care Card -->
+            <div class="query-card">
+                <div class="query-header"><h2>Verify Patient Care Card</h2></div>
+                <p class="query-desc">Enter a patient ID or PHN to verify identity, coverage, and allergy status before dispensing.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="card-id">Patient ID or PHN</label>
+                        <input type="text" id="card-id" placeholder="e.g. 1  or  123456789">
+                    </div>
+                    <button type="submit" class="btn-query">Verify Patient</button>
+                </form>
+                <div class="result-placeholder"><span>Patient details will appear here</span></div>
+            </div>
+
+            <!-- Patient Medical Records -->
+            <div class="query-card">
+                <div class="query-header"><h2>Patient Medical Records</h2></div>
+                <p class="query-desc">Retrieve a patient's medical history, allergies, dependents, and prescribing physicians.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="record-id">Patient ID or Name</label>
+                        <input type="text" id="record-id" placeholder="e.g. 6  or  Ayden Watt">
+                    </div>
+                    <div class="form-group">
+                        <label for="record-type">Record Type</label>
+                        <select id="record-type">
+                            <option value="all">All Records</option>
+                            <option value="history">Allergies &amp; Medical History</option>
+                            <option value="medications">Prescriptions</option>
+                            <option value="physician">Prescribing Physicians</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-query">Retrieve Records</button>
+                </form>
+                <div class="result-placeholder"><span>Records will appear here</span></div>
+            </div>
+
+            <!-- Coverage Eligibility -->
+            <div class="query-card">
+                <div class="query-header"><h2>Insurance Coverage Eligibility</h2></div>
+                <p class="query-desc">Check whether a patient has active insurance coverage and whether a specific medication is covered under their plan.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="elig-patient-id">Patient ID or Name</label>
+                        <input type="text" id="elig-patient-id" placeholder="e.g. 3  or  Raymond Yao">
+                    </div>
+                    <div class="form-group">
+                        <label for="elig-din">DIN or Medication Name (optional)</label>
+                        <input type="text" id="elig-din" placeholder="e.g. 2394480  or  Lisinopril">
+                    </div>
+                    <button type="submit" class="btn-query">Check Eligibility</button>
+                </form>
+                <div class="result-placeholder"><span>Coverage details will appear here</span></div>
+            </div>
+
+            <!-- Coverage Limits -->
+            <div class="query-card">
+                <div class="query-header"><h2>Coverage Limits &amp; Benefits</h2></div>
+                <p class="query-desc">View co-pay amounts and plan limits for a specific insurance policy. Optionally check coverage for a specific drug.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="limit-policy">Policy Number</label>
+                        <input type="text" id="limit-policy" placeholder="e.g. 1  through  7">
+                    </div>
+                    <div class="form-group">
+                        <label for="limit-din">DIN or Medication Name (optional)</label>
+                        <input type="text" id="limit-din" placeholder="e.g. 2381494  or  Humira">
+                    </div>
+                    <button type="submit" class="btn-query">View Coverage</button>
+                </form>
+                <div class="result-placeholder"><span>Coverage limits will appear here</span></div>
+            </div>
+
+        </div>
+
+        <!-- ── PRESCRIPTIONS ──────────────────────────────────── -->
+        <div class="staff-col" id="prescriptions">
+            <div class="col-header">Prescriptions</div>
+
+            <!-- Track Prescription -->
+            <div class="query-card">
+                <div class="query-header"><h2>Track Prescription</h2></div>
+                <p class="query-desc">Look up a prescription by its ID to view status, expiry, refills remaining, and dispensing instructions.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="track-rx-id">Prescription ID</label>
+                        <input type="text" id="track-rx-id" placeholder="e.g. 1  through  9">
+                    </div>
+                    <button type="submit" class="btn-query">Track Prescription</button>
+                </form>
+                <div class="result-placeholder"><span>Prescription status will appear here</span></div>
+            </div>
+
+            <!-- Prescription History -->
+            <div class="query-card">
+                <div class="query-header"><h2>Prescription History</h2></div>
+                <p class="query-desc">View all prescriptions for a patient, including prescribing doctor, medication, and current status.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="hist-patient-id">Patient ID or Name</label>
+                        <input type="text" id="hist-patient-id" placeholder="e.g. 1  or  Kerry Maniscalco">
+                    </div>
+                    <div class="form-group">
+                        <label for="hist-status">Filter by Status</label>
+                        <select id="hist-status">
+                            <option value="all">All</option>
+                            <option value="active">Active</option>
+                            <option value="expired">Expired</option>
+                            <option value="completed">Completed (no refills)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-query">View History</button>
+                </form>
+                <div class="result-placeholder"><span>Prescription history will appear here</span></div>
+            </div>
+
+            <!-- Process Refill -->
+            <div class="query-card">
+                <div class="query-header"><h2>Process Refill</h2></div>
+                <p class="query-desc">Process a refill for a patient. Confirm last name matches before approving. Checks expiry and remaining refills automatically.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="refill-last-name">Patient Last Name</label>
+                        <input type="text" id="refill-last-name" placeholder="e.g. Watt">
+                    </div>
+                    <div class="form-group">
+                        <label for="refill-rx-id">Prescription ID</label>
+                        <input type="text" id="refill-rx-id" placeholder="e.g. 8">
+                    </div>
+                    <button type="submit" class="btn-query">Process Refill</button>
+                </form>
+                <div class="result-placeholder"><span>Refill confirmation will appear here</span></div>
+            </div>
+
+            <!-- Dosage Verification -->
+            <div class="query-card">
+                <div class="query-header"><h2>Dosage Verification</h2></div>
+                <p class="query-desc">Verify the dispensed dosage matches the prescription on file before releasing the medication to the patient.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="dose-rx-id">Prescription ID</label>
+                        <input type="text" id="dose-rx-id" placeholder="e.g. 5">
+                    </div>
+                    <div class="form-group">
+                        <label for="dose-dispensed">Dosage Being Dispensed</label>
+                        <input type="text" id="dose-dispensed" placeholder="e.g. 10mg tablet">
+                    </div>
+                    <button type="submit" class="btn-query">Verify Dosage</button>
+                </form>
+                <div class="result-placeholder"><span>Verification result will appear here</span></div>
+            </div>
+
+        </div>
+
+        <!-- ── DISPENSING & INVENTORY ──────────────────────────── -->
+        <div class="staff-col" id="dispensing">
+            <div class="col-header">Dispensing &amp; Inventory</div>
+
+            <!-- Dispense Medication -->
+            <div class="query-card">
+                <div class="query-header"><h2>Dispense Medication</h2></div>
+                <p class="query-desc">Record a dispense transaction. Links an employee, prescription, invoice number, and payment method — matching the DISPENSE table.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="disp-emp-id">Employee ID</label>
+                        <input type="text" id="disp-emp-id" placeholder="e.g. 1 (Ava Nguyen)">
+                    </div>
+                    <div class="form-group">
+                        <label for="disp-rx-id">Prescription ID</label>
+                        <input type="text" id="disp-rx-id" placeholder="e.g. 3">
+                    </div>
+                    <div class="form-group">
+                        <label for="disp-pay">Payment Method</label>
+                        <select id="disp-pay">
+                            <option value="VISA">VISA</option>
+                            <option value="MASTERCARD">MASTERCARD</option>
+                            <option value="CASH">CASH</option>
+                            <option value="DEBIT">DEBIT</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-query">Record Dispense</button>
+                </form>
+                <div class="result-placeholder"><span>Invoice confirmation will appear here</span></div>
+            </div>
+
+            <!-- Payment History -->
+            <div class="query-card">
+                <div class="query-header"><h2>Payment History</h2></div>
+                <p class="query-desc">View all dispense transactions for a patient — invoice numbers, dates, medications, and payment methods.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="bill-patient-id">Patient ID or Name</label>
+                        <input type="text" id="bill-patient-id" placeholder="e.g. 2  or  Xiong Yao">
+                    </div>
+                    <button type="submit" class="btn-query">View Payment History</button>
+                </form>
+                <div class="result-placeholder"><span>Payment records will appear here</span></div>
+            </div>
+
+            <!-- Staff Operations Log -->
+            <div class="query-card">
+                <div class="query-header"><h2>Staff Operations Log</h2></div>
+                <p class="query-desc">View all dispense records by employee ID or name, and optionally filter by date. Based on the DISPENSE table.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="staff-member">Employee ID or Name</label>
+                        <input type="text" id="staff-member" placeholder="e.g. 5  or  Sophia Martinez">
+                    </div>
+                    <div class="form-group">
+                        <label for="staff-date">Date (optional)</label>
+                        <input type="date" id="staff-date">
+                    </div>
+                    <button type="submit" class="btn-query">View Operations Log</button>
+                </form>
+                <div class="result-placeholder"><span>Operations log will appear here</span></div>
+            </div>
+
+            <!-- Check Medication Stock -->
+            <div class="query-card">
+                <div class="query-header"><h2>Medication Stock Check</h2></div>
+                <p class="query-desc">Look up current stock quantity for any medication by name or DIN. Based on the MEDICATIONS table.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="inv-drug-name">Medication Name or DIN</label>
+                        <input type="text" id="inv-drug-name" placeholder="e.g. Tylenol  or  2394480">
+                    </div>
+                    <button type="submit" class="btn-query">Check Stock</button>
+                </form>
+                <div class="result-placeholder"><span>Stock status will appear here</span></div>
+            </div>
+
+            <!-- Expiry Date Check -->
+            <div class="query-card">
+                <div class="query-header"><h2>Expiry Date Check</h2></div>
+                <p class="query-desc">Check which medications are expiring within a selected window. Flag expired items for disposal.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="exp-drug">Medication Name or DIN (leave blank for all)</label>
+                        <input type="text" id="exp-drug" placeholder="e.g. Humira  or  2381494">
+                    </div>
+                    <div class="form-group">
+                        <label for="exp-alert-range">Alert Window</label>
+                        <select id="exp-alert-range">
+                            <option value="30">Expiring within 30 days</option>
+                            <option value="60">Expiring within 60 days</option>
+                            <option value="90">Expiring within 90 days</option>
+                            <option value="365">Expiring within 1 year</option>
+                            <option value="expired">Already Expired</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-query">Check Expiry</button>
+                </form>
+                <div class="result-placeholder"><span>Expiry results will appear here</span></div>
+            </div>
+
+            <!-- Drug Interaction Check -->
+            <div class="query-card">
+                <div class="query-header"><h2>Drug Interaction Check</h2></div>
+                <p class="query-desc">Check for known interactions between two or three medications before dispensing. Enter medication names as they appear in MEDICATIONS table.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="interact-drug-1">Medication 1</label>
+                        <input type="text" id="interact-drug-1" placeholder="e.g. Ibuprofen">
+                    </div>
+                    <div class="form-group">
+                        <label for="interact-drug-2">Medication 2</label>
+                        <input type="text" id="interact-drug-2" placeholder="e.g. Lisinopril">
+                    </div>
+                    <div class="form-group">
+                        <label for="interact-drug-3">Medication 3 (optional)</label>
+                        <input type="text" id="interact-drug-3" placeholder="e.g. Aspirin">
+                    </div>
+                    <button type="submit" class="btn-query">Check Interactions</button>
+                </form>
+                <div class="result-placeholder"><span>Interaction results will appear here</span></div>
+            </div>
+
+            <!-- Place Medication Order -->
+            <div class="query-card">
+                <div class="query-header"><h2>Place Medication Order</h2></div>
+                <p class="query-desc">Place a restocking order for a medication. Reflects the ORDERS and HANDLES tables. Current vendor on file: McKesson.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="order-drug">Medication Name</label>
+                        <input type="text" id="order-drug" placeholder="e.g. Pancrelipase">
+                    </div>
+                    <div class="form-group">
+                        <label for="order-qty">Quantity to Order</label>
+                        <input type="number" id="order-qty" placeholder="e.g. 100" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="order-supplier">Vendor</label>
+                        <select id="order-supplier">
+                            <option value="mckesson">McKesson (on file)</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="order-priority">Priority</label>
+                        <select id="order-priority">
+                            <option value="standard">Standard</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-query">Place Order</button>
+                </form>
+                <div class="result-placeholder"><span>Order confirmation will appear here</span></div>
+            </div>
+
+            <!-- Medication Pickup Check -->
+            <div class="query-card">
+                <div class="query-header"><h2>Medication Pickup Check</h2></div>
+                <p class="query-desc">Confirm whether a patient's prescription is ready for pickup by entering their last name and date of birth.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="pickup-last-name">Patient Last Name</label>
+                        <input type="text" id="pickup-last-name" placeholder="e.g. Tokushige">
+                    </div>
+                    <div class="form-group">
+                        <label for="pickup-dob">Date of Birth</label>
+                        <input type="date" id="pickup-dob">
+                    </div>
+                    <button type="submit" class="btn-query">Check Pickup Status</button>
+                </form>
+                <div class="result-placeholder"><span>Pickup status will appear here</span></div>
+            </div>
+
+        </div>
+
+        <!-- ── REPORTS & ADMIN ────────────────────────────────── -->
+        <div class="staff-col" id="reports">
+            <div class="col-header">Reports &amp; Admin</div>
+
+            <!-- PROJECTION: choose which patient columns to show -->
+            <div class="query-card">
+                <div class="query-header"><h2>Patient Info — Projection</h2></div>
+                <p class="query-desc">Choose which fields to display for a patient. This is a <strong>projection query</strong> — you control which columns are returned.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="proj-patient-id">Patient ID</label>
+                        <input type="text" id="proj-patient-id" placeholder="e.g. 1">
+                    </div>
+                    <div class="form-group">
+                        <label>Columns to Show</label>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+                            <label><input type="checkbox" name="proj-col" value="Fname" checked> First Name</label>
+                            <label><input type="checkbox" name="proj-col" value="Lname" checked> Last Name</label>
+                            <label><input type="checkbox" name="proj-col" value="DOB"> Date of Birth</label>
+                            <label><input type="checkbox" name="proj-col" value="Phone"> Phone</label>
+                            <label><input type="checkbox" name="proj-col" value="Email"> Email</label>
+                            <label><input type="checkbox" name="proj-col" value="City"> City</label>
+                            <label><input type="checkbox" name="proj-col" value="Prov"> Province</label>
+                            <label><input type="checkbox" name="proj-col" value="Allergies"> Allergies</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-query">Run Projection</button>
+                </form>
+                <div class="result-placeholder"><span>Projected columns will appear here</span></div>
+            </div>
+
+            <!-- DIVISION: patients with ALL prescriptions dispensed -->
+            <div class="query-card">
+                <div class="query-header"><h2>Fully Dispensed Patients — Division</h2></div>
+                <p class="query-desc">Find patients who have had <em>every one</em> of their prescriptions dispensed at least once. This is a <strong>division query</strong> using NOT EXISTS.</p>
+                <form class="query-form">
+                    <button type="submit" class="btn-query">Run Division Query</button>
+                </form>
+                <div class="result-placeholder"><span>Results will appear here</span></div>
+            </div>
+
+            <!-- AGGREGATION 1: medication statistics -->
+            <div class="query-card">
+                <div class="query-header"><h2>Medication Statistics — Aggregation</h2></div>
+                <p class="query-desc">Count all medications and compute average, minimum, and maximum cost. Uses <strong>COUNT, AVG, MIN, MAX</strong>.</p>
+                <form class="query-form">
+                    <button type="submit" class="btn-query">Get Medication Stats</button>
+                </form>
+                <div class="result-placeholder"><span>Statistics will appear here</span></div>
+            </div>
+
+            <!-- AGGREGATION 2: revenue by payment method -->
+            <div class="query-card">
+                <div class="query-header"><h2>Revenue by Payment Method — Aggregation</h2></div>
+                <p class="query-desc">Count transactions and total revenue grouped by payment method. Uses <strong>COUNT, SUM, GROUP BY</strong>.</p>
+                <form class="query-form">
+                    <button type="submit" class="btn-query">Get Revenue Summary</button>
+                </form>
+                <div class="result-placeholder"><span>Revenue summary will appear here</span></div>
+            </div>
+
+            <!-- NESTED AGGREGATION WITH GROUP BY -->
+            <div class="query-card">
+                <div class="query-header"><h2>Prescriptions Per Patient — Nested GROUP BY</h2></div>
+                <p class="query-desc">Show how many prescriptions each patient has, filtered by a minimum count. Uses <strong>GROUP BY + HAVING</strong>.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="grp-min-rx">Minimum Prescriptions</label>
+                        <input type="number" id="grp-min-rx" value="1" min="1">
+                    </div>
+                    <button type="submit" class="btn-query">Run Group Query</button>
+                </form>
+                <div class="result-placeholder"><span>Results will appear here</span></div>
+            </div>
+
+            <!-- UPDATE: patient contact info -->
+            <div class="query-card">
+                <div class="query-header"><h2>Update Patient Contact — Update</h2></div>
+                <p class="query-desc">Update a patient's phone number, email address, or city. Uses an <strong>UPDATE</strong> statement.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="upd-patient-id">Patient ID</label>
+                        <input type="text" id="upd-patient-id" placeholder="e.g. 3">
+                    </div>
+                    <div class="form-group">
+                        <label for="upd-phone">New Phone (leave blank to keep)</label>
+                        <input type="text" id="upd-phone" placeholder="e.g. 604-555-0199">
+                    </div>
+                    <div class="form-group">
+                        <label for="upd-email">New Email (leave blank to keep)</label>
+                        <input type="text" id="upd-email" placeholder="e.g. patient@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="upd-city">New City (leave blank to keep)</label>
+                        <input type="text" id="upd-city" placeholder="e.g. Burnaby">
+                    </div>
+                    <button type="submit" class="btn-query">Update Patient</button>
+                </form>
+                <div class="result-placeholder"><span>Update confirmation will appear here</span></div>
+            </div>
+
+            <!-- DELETE: remove patient record -->
+            <div class="query-card">
+                <div class="query-header"><h2>Delete Patient Record — Delete</h2></div>
+                <p class="query-desc">Permanently delete a patient and all related records (prescriptions, dispense history, insurance, dependents). Cascade <strong>DELETE</strong>.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="del-patient-id">Patient ID</label>
+                        <input type="text" id="del-patient-id" placeholder="e.g. 9">
+                    </div>
+                    <div class="form-group">
+                        <label for="del-confirm">Type DELETE to confirm</label>
+                        <input type="text" id="del-confirm" placeholder="DELETE">
+                    </div>
+                    <button type="submit" class="btn-query" style="background:#dc2626">Delete Patient</button>
+                </form>
+                <div class="result-placeholder"><span>Deletion result will appear here</span></div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 MediCare Pharmacy &mdash; Authorized Staff Access Only &middot; <a href="patient.html">Patient Portal</a></p>
+    </footer>
+
+    <script src="pharmacy.js"></script>
+</body>
+</html>
