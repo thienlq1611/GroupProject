@@ -2,7 +2,7 @@
 
 const API = 'api.php';
 
-// ── HELPERS ──────────────────────────────────────────────────────────────────
+// ── HELPERS 
 
 function badge(label, color) {
     return `<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.74rem;font-weight:700;background:${color};color:#fff;white-space:nowrap">${label}</span>`;
@@ -151,11 +151,9 @@ function staffHandlers() {
         if (data.error) { err(box, data.error); return; }
         if (!data.length) { err(box, 'No patients found matching your criteria.'); return; }
         show(box, `${data.length} patient(s) found:<br><br>` +
-            tbl(['ID', 'Name', 'DOB', 'Address', 'City', 'PostCode', 'Country', 'Prov', 'Phone', 'Email', 'Allergies', 'Medical History', 'Notes', 'PHN'],
+            tbl(['ID', 'Name', 'DOB', 'PHN'],
                 data.map(p => [
                     p.ID, `${p.Fname} ${p.Lname}`, p.DOB,
-                    p.St || '—', p.City || '—', p.PostCode || '—', p.Country || '—', p.Prov || '—',
-                    p.Phone || '—', p.Email || '—', p.Allergies || '—', p.Medical_History || '—', p.Notes || '—',
                     p.PHN || badge('No PHN', '#dc2626')
                 ])));
     });
