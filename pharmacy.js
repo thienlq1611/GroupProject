@@ -306,6 +306,8 @@ function staffHandlers() {
         const rx = await apiFetch({ action: 'get_prescription', id });
         if (rx.error) { err(box, rx.error); return; }
         const days = daysUntil(rx.Expiry_Date);
+
+        // calculate the number of refills left
         const left = rx.Refills - rx.Refills_Used;
         show(box, kv([
             ['Prescription #',   rx.Prescription_ID],
@@ -395,25 +397,6 @@ function staffHandlers() {
             ]));
     });
 
-    // Dispense Medication — writes to DISPENSE table
-    on('disp-emp-id', async e => {
-        const empId = document.getElementById('disp-emp-id').value.trim();
-        const rxId  = document.getElementById('disp-rx-id').value.trim();
-        const pay   = document.getElementById('disp-pay').value;
-        const box   = nb(e.target);
-        loading(box);
-        const data = await apiPost('record_dispense', { emp_id: empId, rx_id: rxId, pay_method: pay });
-        if (data.error) { err(box, data.error); return; }
-        show(box, badge('Dispense Recorded in DB', '#16a34a') + '<br><br>' + kv([
-            ['Invoice No.',  data.invoice_no],
-            ['Date',         data.date],
-            ['Employee',     data.employee],
-            ['Prescription', '#' + data.rx_id],
-            ['Medication',   data.medication],
-            ['Cost',         data.cost ? '$' + parseFloat(data.cost).toFixed(2) : '—'],
-            ['Payment',      badge(data.pay_method, '#2563a8')],
-        ]));
-    });
 
     // Payment History
     on('bill-patient-id', async e => {
@@ -436,24 +419,6 @@ function staffHandlers() {
                 ])));
     });
 
-    // Staff Operations Log
-    on('staff-member', async e => {
-        const q    = document.getElementById('staff-member').value.trim();
-        const date = document.getElementById('staff-date').value;
-        const box  = nb(e.target);
-        loading(box);
-        const data = await apiFetch({ action: 'staff_log', q, date });
-        if (data.error) { err(box, data.error); return; }
-        if (!data.length) { err(box, 'No dispense records found.'); return; }
-        show(box, `${data.length} record(s):<br><br>` +
-            tbl(['Invoice', 'Date', 'Employee', 'Role', 'Rx #', 'Medication', 'Strength', 'Payment'],
-                data.map(r => [
-                    r.Invoice_No, r.Date_Of_Invoice,
-                    `${r.Fname} ${r.Lname}`, badge(r.Role, '#2563a8'),
-                    r.Prescription_ID, r.Drug_Name, r.Strength,
-                    badge(r.Pay_Method, '#555')
-                ])));
-    });
 
     // Stock Check — columns: ID, Drug_Name, Strength, Stock_Qty, Qty_per_unit, DIN
     on('inv-drug-name', async e => {
@@ -597,7 +562,7 @@ function patientHandlers() {
         loading(box);
         const data = await apiFetch({ action: 'patient_prescriptions', q });
         if (data.error) { err(box, data.error); return; }
-        show(box, `<strong>${data.patient_name}</strong> — ${data.rows.length} prescription(s)<br><br>` +
+        show(box, `<strong>${data.patient_name}</strong> has ${data.rows.length} prescription(s)<br><br>` +
             tbl(['Rx #', 'Medication', 'Strength', 'Doctor', 'Issued', 'Expiry', 'Status'],
                 data.rows.map(r => [
                     r.Prescription_ID, r.Drug_Name, r.Strength,

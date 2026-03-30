@@ -15,8 +15,7 @@ $action = $_GET['action'] ?? '';
 
 switch ($action) {
 
-    // FIND PATIENT
-    // SELECTION query with LIKE: search patients by name, DOB, and city
+    // verify patient in the pharmacy's database for "Find Patient" feature
     case 'find_patient':
         $name = '%' . $conn->real_escape_string($_GET['name'] ?? '') . '%';
         $dob  = $conn->real_escape_string($_GET['dob'] ?? '');
@@ -35,15 +34,14 @@ switch ($action) {
         echo json_encode($result->fetch_all(MYSQLI_ASSOC));
         break;
 
-    // GET SINGLE PATIENT (full detail)
-    // SELECTION: WHERE finds one patient by ID, PHN, last name, or full name
+    // get a single patient's info for "Patient Information" feature
     case 'get_patient':
         $q = $conn->real_escape_string($_GET['q'] ?? '');
 
         $result = $conn->query(
             "SELECT ID, PHN, Fname, Lname, DOB, St, City, PostCode, Country, Phone, Email, Allergies, Medical_History, Notes, Prov
              FROM patients
-             WHERE ID = '$q' OR PHN = '$q'
+             WHERE ID = '$q' OR PHN = '$q'"
         );
         $patient = $result->fetch_assoc();
 
@@ -54,7 +52,7 @@ switch ($action) {
 
         $pid = $patient['ID'];
 
-        // JOIN: get insurance info by joining is_insured and insurance tables
+        // diplays insurance info for each patient 
         $result2 = $conn->query(
             "SELECT i.Iname, ii.PolicyNo, ii.MemberID, ii.Notes AS CoverageType
              FROM is_insured ii
@@ -64,7 +62,7 @@ switch ($action) {
         );
         $patient['insurance'] = $result2->fetch_all(MYSQLI_ASSOC);
 
-        // SELECTION: get patient's dependents
+        // displays dependent info for each patient
         $result3 = $conn->query(
             "SELECT Name, DOB, Allergies, Medical_History
              FROM dependents
@@ -75,8 +73,7 @@ switch ($action) {
         echo json_encode($patient);
         break;
 
-    // GET SINGLE PRESCRIPTION
-    // JOIN: joins prescriptions, patients, medications, and doctors tables
+    // retrieve prescriptions details for "Track Prescription" feature
     case 'get_prescription':
         $id = (int)($_GET['id'] ?? 0);
 
@@ -86,11 +83,16 @@ switch ($action) {
                     m.Drug_Name, m.Strength, m.DIN, m.Cost,
                     d.Fname AS Doc_Fname, d.Lname AS Doc_Lname, d.Specialty
              FROM prescriptions p
-             JOIN patients pt   ON pt.ID = p.Patient_ID
-             JOIN contains c    ON c.Prescription_ID = p.Prescription_ID
-             JOIN medications m ON m.ID = c.ID
-             LEFT JOIN prescribe_for pf ON pf.PrescriptionID = p.Prescription_ID
-             LEFT JOIN doctors d        ON d.ID = pf.DoctorID
+             JOIN patients pt
+             ON pt.ID = p.Patient_ID
+             JOIN contains c
+             ON c.Prescription_ID = p.Prescription_ID
+             JOIN medications m
+             ON m.ID = c.ID
+             LEFT JOIN prescribe_for pf
+             ON pf.PrescriptionID = p.Prescription_ID
+             LEFT JOIN doctors d
+             ON d.ID = pf.DoctorID
              WHERE p.Prescription_ID = $id
              LIMIT 1"
         );
@@ -101,7 +103,7 @@ switch ($action) {
             break;
         }
 
-        // COUNT (aggregation): count how many times this prescription was dispensed
+        // count the number of times this prescription was dispensed to calculate the remaining refills in pharmacy.js
         $result2 = $conn->query(
             "SELECT COUNT(*) AS used
              FROM dispense
@@ -112,16 +114,15 @@ switch ($action) {
         echo json_encode($rx);
         break;
 
-    // ── ALL PRESCRIPTIONS FOR ONE PATIENT ────────────────────────────────────
-    // JOIN: links prescriptions, medications, and doctors for one patient
+    // Retrieves all prescriptions for a patient for "Prescription History" feature
     case 'patient_prescriptions':
         $q = $conn->real_escape_string($_GET['q'] ?? '');
 
-        // First find the patient
+        // find and display patients' name
         $result = $conn->query(
             "SELECT ID, Fname, Lname
              FROM patients
-             WHERE ID = '$q' OR PHN = '$q' OR Lname = '$q' OR CONCAT(Fname, ' ', Lname) = '$q'"
+             WHERE ID = '$q'"
         );
         $patient = $result->fetch_assoc();
 
@@ -132,16 +133,20 @@ switch ($action) {
 
         $pid = $patient['ID'];
 
-        // JOIN: get all prescriptions with medication and doctor info
+        // retrieves all prescriptions for the patient selected
         $result2 = $conn->query(
             "SELECT p.Prescription_ID, p.Date_Issued, p.Expiry_Date, p.Instructions, p.Refills,
                     m.Drug_Name, m.Strength, m.DIN,
-                    d.Fname AS Doc_Fname, d.Lname AS Doc_Lname, d.Specialty
+                    d.Fname AS Doc_Fname, d.Lname AS Doc_Lname
              FROM prescriptions p
-             JOIN contains c    ON c.Prescription_ID = p.Prescription_ID
-             JOIN medications m ON m.ID = c.ID
-             LEFT JOIN prescribe_for pf ON pf.PrescriptionID = p.Prescription_ID
-             LEFT JOIN doctors d        ON d.ID = pf.DoctorID
+             JOIN contains c
+             ON c.Prescription_ID = p.Prescription_ID
+             JOIN medications m
+             ON m.ID = c.ID
+             JOIN prescribe_for pf
+             ON pf.PrescriptionID = p.Prescription_ID
+             JOIN doctors d
+             ON d.ID = pf.DoctorID
              WHERE p.Patient_ID = $pid
              ORDER BY p.Date_Issued DESC"
         );
@@ -153,83 +158,19 @@ switch ($action) {
         ]);
         break;
 
-    // ── RECORD DISPENSE (INSERT) ──────────────────────────────────────────────
-    // INSERT: adds a new row into the dispense table
-    case 'record_dispense':
-        $empId = (int)($_POST['emp_id']     ?? 0);
-        $rxId  = (int)($_POST['rx_id']      ?? 0);
-        $pay   = $conn->real_escape_string($_POST['pay_method'] ?? '');
 
-        if (!$empId || !$rxId || !$pay) {
-            echo json_encode(['error' => 'Missing required fields.']);
-            break;
-        }
-
-        // Check employee exists
-        $emp = $conn->query("SELECT ID, Fname, Lname, Role FROM employees WHERE ID = $empId")->fetch_assoc();
-        if (!$emp) { echo json_encode(['error' => "Employee ID $empId not found."]); break; }
-
-        // Check prescription exists
-        $rx = $conn->query("SELECT Prescription_ID, Expiry_Date FROM prescriptions WHERE Prescription_ID = $rxId")->fetch_assoc();
-        if (!$rx) { echo json_encode(['error' => "Prescription #$rxId not found."]); break; }
-
-        // Check prescription is not expired
-        if ($rx['Expiry_Date'] && $rx['Expiry_Date'] !== '0000-00-00' && strtotime($rx['Expiry_Date']) < time()) {
-            echo json_encode(['error' => "Prescription #$rxId expired on {$rx['Expiry_Date']}."]);
-            break;
-        }
-
-        // COUNT: check this employee hasn't already dispensed this prescription
-        $check = $conn->query(
-            "SELECT COUNT(*) AS n
-             FROM dispense
-             WHERE EmpID = $empId AND Prescription_ID = $rxId"
-        )->fetch_assoc();
-        if ($check['n'] > 0) {
-            echo json_encode(['error' => "{$emp['Fname']} already dispensed prescription #$rxId."]);
-            break;
-        }
-
-        $invoiceNo = rand(10000, 99999);
-        $today = date('Y-m-d');
-
-        // INSERT new dispense record
-        $conn->query(
-            "INSERT INTO dispense (EmpID, Prescription_ID, Invoice_No, Pay_Method, Date_Of_Invoice)
-             VALUES ($empId, $rxId, $invoiceNo, '$pay', '$today')"
-        );
-
-        // JOIN: get medication info for the confirmation message
-        $med = $conn->query(
-            "SELECT m.Drug_Name, m.Strength, m.Cost
-             FROM medications m
-             JOIN contains c ON c.ID = m.ID
-             WHERE c.Prescription_ID = $rxId
-             LIMIT 1"
-        )->fetch_assoc();
-
-        echo json_encode([
-            'success'    => true,
-            'invoice_no' => $invoiceNo,
-            'date'       => $today,
-            'employee'   => "{$emp['Fname']} {$emp['Lname']} ({$emp['Role']})",
-            'rx_id'      => $rxId,
-            'medication' => $med ? "{$med['Drug_Name']} ({$med['Strength']})" : '—',
-            'cost'       => $med['Cost'] ?? null,
-            'pay_method' => $pay,
-        ]);
-        break;
-
-    // ── PAYMENT HISTORY ───────────────────────────────────────────────────────
-    // JOIN: links dispense, prescriptions, medications, and employees tables
+    // retrieves payment history for "Payment History" feature
     case 'payment_history':
         $q = $conn->real_escape_string($_GET['q'] ?? '');
 
         $patient = $conn->query(
+
             "SELECT ID, Fname, Lname
              FROM patients
-             WHERE ID = '$q' OR PHN = '$q' OR Lname = '$q' OR CONCAT(Fname, ' ', Lname) = '$q'"
+             WHERE ID = '$q'"
+
         )->fetch_assoc();
+
         if (!$patient) { echo json_encode(['error' => "Patient \"$q\" not found."]); break; }
 
         $pid = $patient['ID'];
@@ -250,39 +191,6 @@ switch ($action) {
         echo json_encode(['patient' => $patient, 'rows' => $result->fetch_all(MYSQLI_ASSOC)]);
         break;
 
-    // ── STAFF LOG ─────────────────────────────────────────────────────────────
-    // JOIN: links dispense, employees, and medications tables
-    case 'staff_log':
-        $q    = $conn->real_escape_string($_GET['q']    ?? '');
-        $date = $conn->real_escape_string($_GET['date'] ?? '');
-
-        $empId = 0;
-        if ($q !== '') {
-            $found = $conn->query(
-                "SELECT ID FROM employees
-                 WHERE ID = '$q' OR Lname = '$q' OR CONCAT(Fname, ' ', Lname) = '$q'"
-            )->fetch_assoc();
-            if (!$found) { echo json_encode(['error' => "Employee \"$q\" not found."]); break; }
-            $empId = $found['ID'];
-        }
-
-        // Add optional filters
-        $emp_filter  = $empId  ? "AND d.EmpID = $empId"                  : "";
-        $date_filter = $date   ? "AND d.Date_Of_Invoice = '$date'"        : "";
-
-        $result = $conn->query(
-            "SELECT d.Invoice_No, d.Date_Of_Invoice, d.Pay_Method, d.Prescription_ID,
-                    e.Fname, e.Lname, e.Role,
-                    m.Drug_Name, m.Strength
-             FROM dispense d
-             JOIN employees e   ON e.ID = d.EmpID
-             JOIN contains c    ON c.Prescription_ID = d.Prescription_ID
-             JOIN medications m ON m.ID = c.ID
-             WHERE 1=1 $emp_filter $date_filter
-             ORDER BY d.Date_Of_Invoice DESC"
-        );
-        echo json_encode($result->fetch_all(MYSQLI_ASSOC));
-        break;
 
     // ── MEDICATION SEARCH ─────────────────────────────────────────────────────
     // PROJECTION + SELECTION with LIKE: search medications by name, DIN, or strength

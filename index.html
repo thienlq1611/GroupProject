@@ -31,7 +31,6 @@
             <!-- Find Patient -->
             <div class="query-card">
                 <div class="query-header"><h2>Find Patient</h2></div>
-                <p class="query-desc">Search by patient ID, PHN, last name, or date of birth. All fields are optional — fill in any combination.</p>
                 <form class="query-form">
                     <div class="form-group">
                         <label for="patient-name">Full Name or Last Name</label>
@@ -52,8 +51,7 @@
 
             <!-- Verify Care Card -->
             <div class="query-card">
-                <div class="query-header"><h2>Verify Patient Care Card</h2></div>
-                <p class="query-desc">Enter a patient ID or PHN to verify identity, coverage, and allergy status before dispensing.</p>
+                <div class="query-header"><h2>Patient Information</h2></div>
                 <form class="query-form">
                     <div class="form-group">
                         <label for="card-id">Patient ID or PHN</label>
@@ -123,6 +121,20 @@
                 <div class="result-placeholder"><span>Coverage limits will appear here</span></div>
             </div>
 
+                <!-- Payment History -->
+            <div class="query-card">
+                <div class="query-header"><h2>Payment History</h2></div>
+                <p class="query-desc">View all dispense transactions for a patient — invoice numbers, dates, medications, and payment methods.</p>
+                <form class="query-form">
+                    <div class="form-group">
+                        <label for="bill-patient-id">Patient ID</label>
+                        <input type="text" id="bill-patient-id" placeholder="e.g. 2  or  Xiong Yao">
+                    </div>
+                    <button type="submit" class="btn-query">View Payment History</button>
+                </form>
+                <div class="result-placeholder"><span>Payment records will appear here</span></div>
+            </div>
+
         </div>
 
         <!-- ── PRESCRIPTIONS ──────────────────────────────────── -->
@@ -146,7 +158,7 @@
             <!-- Prescription History -->
             <div class="query-card">
                 <div class="query-header"><h2>Prescription History</h2></div>
-                <p class="query-desc">View all prescriptions for a patient, including prescribing doctor, medication, and current status.</p>
+                <p class="query-desc">View all prescriptions for a patient.</p>
                 <form class="query-form">
                     <div class="form-group">
                         <label for="hist-patient-id">Patient ID or Name</label>
@@ -208,64 +220,8 @@
         <div class="staff-col" id="dispensing">
             <div class="col-header">Dispensing &amp; Inventory</div>
 
-            <!-- Dispense Medication -->
-            <div class="query-card">
-                <div class="query-header"><h2>Dispense Medication</h2></div>
-                <p class="query-desc">Record a dispense transaction. Links an employee, prescription, invoice number, and payment method — matching the DISPENSE table.</p>
-                <form class="query-form">
-                    <div class="form-group">
-                        <label for="disp-emp-id">Employee ID</label>
-                        <input type="text" id="disp-emp-id" placeholder="e.g. 1 (Ava Nguyen)">
-                    </div>
-                    <div class="form-group">
-                        <label for="disp-rx-id">Prescription ID</label>
-                        <input type="text" id="disp-rx-id" placeholder="e.g. 3">
-                    </div>
-                    <div class="form-group">
-                        <label for="disp-pay">Payment Method</label>
-                        <select id="disp-pay">
-                            <option value="VISA">VISA</option>
-                            <option value="MASTERCARD">MASTERCARD</option>
-                            <option value="CASH">CASH</option>
-                            <option value="DEBIT">DEBIT</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn-query">Record Dispense</button>
-                </form>
-                <div class="result-placeholder"><span>Invoice confirmation will appear here</span></div>
-            </div>
 
-            <!-- Payment History -->
-            <div class="query-card">
-                <div class="query-header"><h2>Payment History</h2></div>
-                <p class="query-desc">View all dispense transactions for a patient — invoice numbers, dates, medications, and payment methods.</p>
-                <form class="query-form">
-                    <div class="form-group">
-                        <label for="bill-patient-id">Patient ID or Name</label>
-                        <input type="text" id="bill-patient-id" placeholder="e.g. 2  or  Xiong Yao">
-                    </div>
-                    <button type="submit" class="btn-query">View Payment History</button>
-                </form>
-                <div class="result-placeholder"><span>Payment records will appear here</span></div>
-            </div>
 
-            <!-- Staff Operations Log -->
-            <div class="query-card">
-                <div class="query-header"><h2>Staff Operations Log</h2></div>
-                <p class="query-desc">View all dispense records by employee ID or name, and optionally filter by date. Based on the DISPENSE table.</p>
-                <form class="query-form">
-                    <div class="form-group">
-                        <label for="staff-member">Employee ID or Name</label>
-                        <input type="text" id="staff-member" placeholder="e.g. 5  or  Sophia Martinez">
-                    </div>
-                    <div class="form-group">
-                        <label for="staff-date">Date (optional)</label>
-                        <input type="date" id="staff-date">
-                    </div>
-                    <button type="submit" class="btn-query">View Operations Log</button>
-                </form>
-                <div class="result-placeholder"><span>Operations log will appear here</span></div>
-            </div>
 
             <!-- Check Medication Stock -->
             <div class="query-card">
