@@ -9,10 +9,10 @@ function badge(label, color) {
 }
 
 function tbl(headers, rows) {
-    if (!rows.length) return '<p style="color:#888;font-style:italic;margin:4px 0">No records found.</p>';
-    const ths = headers.map(h =>
-        `<th style="text-align:left;padding:6px 10px;background:#eef2f7;font-weight:700;border-bottom:2px solid #d0d7e0;white-space:nowrap;font-size:0.8rem">${h}</th>`
-    ).join('');
+    if (!rows.length){
+        return '<p style="color:#888;font-style:italic;margin:4px 0">No records found.</p>';
+    }
+    const ths = headers.map(h => `<th style="text-align:left;padding:6px 10px;background:#eef2f7;font-weight:700;border-bottom:2px solid #d0d7e0;white-space:nowrap;font-size:0.8rem">${h}</th>`).join('');
     const trs = rows.map((r, i) =>
         `<tr style="background:${i % 2 ? '#fff' : '#fafbfc'}">${r.map(c =>
             `<td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:0.82rem;vertical-align:top">${(c === null || c === undefined || c === '') ? '<em style="color:#aaa">—</em>' : c}</td>`
@@ -21,7 +21,9 @@ function tbl(headers, rows) {
     return `<div style="overflow-x:auto;margin-top:6px"><table style="width:100%;border-collapse:collapse"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
 }
 
-function kv(pairs) { return tbl(['Field', 'Value'], pairs); }
+function kv(pairs) {
+    return tbl(['Field', 'Value'], pairs);
+}
 
 function show(box, html, isError) {
     box.innerHTML = `<div style="text-align:left;color:${isError ? '#b91c1c' : '#1e293b'}">${html}</div>`;
@@ -29,7 +31,9 @@ function show(box, html, isError) {
     box.style.background  = isError ? '#fff5f5' : '#f7f9fb';
 }
 
-function err(box, msg) { show(box, `<strong>Error:</strong> ${msg}`, true); }
+function err(box, msg) {
+    show(box, `<strong>Error:</strong> ${msg}`, true);
+}
 
 function loading(box) {
     box.innerHTML = '<span style="color:#2563a8;font-style:italic">Loading…</span>';
@@ -37,25 +41,37 @@ function loading(box) {
     box.style.background  = '#f7f9fb';
 }
 
-function nb(form) { return form.nextElementSibling; }
+function nb(form) {
+    return form.nextElementSibling;
+}
 
 function on(id, fn) {
     const el = document.getElementById(id);
-    if (el) el.closest('form').addEventListener('submit', e => { e.preventDefault(); fn(e); });
+    if (el){
+        el.closest('form').addEventListener('submit', e => { e.preventDefault(); fn(e); });
+    }
 }
 
 function isExpired(d) { return d && d !== '0000-00-00' && new Date(d) < new Date(); }
 
 function daysUntil(d) {
-    if (!d || d === '0000-00-00') return null;
+    if (!d || d === '0000-00-00'){
+        return null;
+    }
     return Math.ceil((new Date(d) - new Date()) / 86400000);
 }
 
 function statusBadge(expiry, refillsLeft) {
     const d = daysUntil(expiry);
-    if (d === null || d <= 0) return badge('Expired', '#dc2626');
-    if (refillsLeft <= 0)     return badge('No Refills', '#dc2626');
-    if (d <= 30)              return badge('Expiring Soon', '#d97706');
+    if (d === null || d <= 0){
+        return badge('Expired', '#dc2626');
+    }
+    if (refillsLeft <= 0){
+        return badge('No Refills', '#dc2626');
+    }     
+    if (d <= 30){
+        return badge('Expiring Soon', '#d97706');
+    }             
     return badge('Active', '#16a34a');
 }
 
@@ -63,7 +79,8 @@ async function apiFetch(params) {
     try {
         const res = await fetch(API + '?' + new URLSearchParams(params).toString());
         return await res.json();
-    } catch (e) {
+    }
+    catch (e) {
         return { error: 'Could not reach server. Is XAMPP running?' };
     }
 }
@@ -74,7 +91,8 @@ async function apiPost(action, body) {
         for (const [k, v] of Object.entries(body)) form.append(k, v);
         const res = await fetch(API + '?action=' + action, { method: 'POST', body: form });
         return await res.json();
-    } catch (e) {
+    }
+    catch (e) {
         return { error: 'Could not reach server. Is XAMPP running?' };
     }
 }
@@ -100,7 +118,9 @@ function checkInteractions(drugNames) {
                 (names[i].includes(ix.drug1) && names[j].includes(ix.drug2)) ||
                 (names[i].includes(ix.drug2) && names[j].includes(ix.drug1))
             );
-            if (m) hits.push({ ...m, a: drugNames[i], b: drugNames[j] });
+            if (m){
+                hits.push({ ...m, a: drugNames[i], b: drugNames[j] });
+            }
         }
     }
     return hits;
@@ -513,14 +533,32 @@ function staffHandlers() {
         const box      = nb(e.target);
         if (!drug || !qty) { err(box, 'Please enter a medication name and quantity.'); return; }
         show(box, badge('Order Submitted', '#16a34a') + '<br><br>' + kv([
-            ['Order ID',       'ORD-' + String(Date.now()).slice(-5)],
-            ['Medication',     drug],
-            ['Quantity',       qty + ' units'],
-            ['Vendor',         selEl.options[selEl.selectedIndex].text],
-            ['Priority',       badge(priority === 'urgent' ? 'Urgent' : 'Standard', priority === 'urgent' ? '#d97706' : '#2563a8')],
-            ['Est. Delivery',  priority === 'urgent' ? '24–48 hours' : '3–5 business days'],
-            ['Submitted',      new Date().toLocaleDateString('en-CA')],
+            ['Order ID',      'ORD-' + String(Date.now()).slice(-5)],
+            ['Medication',    drug],
+            ['Quantity',      qty + ' units'],
+            ['Vendor',        selEl.options[selEl.selectedIndex].text],
+            ['Priority',      badge(priority === 'urgent' ? 'Urgent' : 'Standard', priority === 'urgent' ? '#d97706' : '#2563a8')],
+            ['Est. Delivery', priority === 'urgent' ? '24–48 hours' : '3–5 business days'],
+            ['Submitted',     new Date().toLocaleDateString('en-CA')],
         ]));
+    });
+
+    // All Employees
+    document.getElementById('all-employees-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const box = e.target.nextElementSibling;
+        loading(box);
+        const data = await apiFetch({ action: 'all_employees' });
+        if (data.error) { err(box, data.error); return; }
+        show(box, `${data.length} employee(s):<br><br>` +
+            tbl(['ID', 'Name', 'Role', 'Phone', 'Email'],
+                data.map(emp => [
+                    emp.ID,
+                    `${emp.Fname} ${emp.Lname}`,
+                    badge(emp.Role, emp.Role === 'Pharmacist' ? '#16a34a' : emp.Role === 'Technician' ? '#7c3aed' : '#2563a8'),
+                    emp.Phone || '—',
+                    emp.Email || '—',
+                ])));
     });
 
     // Medication Pickup Check
@@ -547,6 +585,7 @@ function staffHandlers() {
                     i % 3 !== 0 ? badge('Ready for Pickup', '#16a34a') : badge('Being Prepared', '#d97706')
                 ])));
     });
+
 }
 
 // ── PATIENT PORTAL ───────────────────────────────────────────────────────────

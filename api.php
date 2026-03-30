@@ -6,7 +6,7 @@ header('Access-Control-Allow-Origin: *');
 $host = '127.0.0.1';
 $db   = 'pharmacydb';
 $user = 'root';
-$pass = 'Top@2805961155';
+$pass = '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
