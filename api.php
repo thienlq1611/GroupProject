@@ -43,7 +43,7 @@ switch ($action) {
         $result = $conn->query(
             "SELECT ID, PHN, Fname, Lname, DOB, St, City, PostCode, Country, Phone, Email, Allergies, Medical_History, Notes, Prov
              FROM patients
-             WHERE ID = '$q' OR PHN = '$q' OR Lname = '$q' OR CONCAT(Fname, ' ', Lname) = '$q'"
+             WHERE ID = '$q' OR PHN = '$q'
         );
         $patient = $result->fetch_assoc();
 
@@ -58,7 +58,8 @@ switch ($action) {
         $result2 = $conn->query(
             "SELECT i.Iname, ii.PolicyNo, ii.MemberID, ii.Notes AS CoverageType
              FROM is_insured ii
-             JOIN insurance i ON i.ID = ii.InsID
+             JOIN insurance i
+             ON i.ID = ii.InsID
              WHERE ii.PatID = $pid"
         );
         $patient['insurance'] = $result2->fetch_all(MYSQLI_ASSOC);
@@ -74,7 +75,7 @@ switch ($action) {
         echo json_encode($patient);
         break;
 
-    // ── GET SINGLE PRESCRIPTION ───────────────────────────────────────────────
+    // GET SINGLE PRESCRIPTION
     // JOIN: joins prescriptions, patients, medications, and doctors tables
     case 'get_prescription':
         $id = (int)($_GET['id'] ?? 0);
