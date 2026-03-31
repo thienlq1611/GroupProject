@@ -3,10 +3,10 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
 // ── DB CONNECTION ─────────────────────────────────────────────────────────────
-$host = '127.0.0.1';
+$host = 'localhost';
 $db   = 'pharmacydb';
 $user = 'root';
-$pass = 'Top@2805961155';
+$pass = 'OnePiece877!';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
