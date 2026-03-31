@@ -2,17 +2,17 @@
 
 const API = 'api.php';
 
-// ── HELPERS ──────────────────────────────────────────────────────────────────
+// ── HELPERS 
 
 function badge(label, color) {
     return `<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.74rem;font-weight:700;background:${color};color:#fff;white-space:nowrap">${label}</span>`;
 }
 
 function tbl(headers, rows) {
-    if (!rows.length) return '<p style="color:#888;font-style:italic;margin:4px 0">No records found.</p>';
-    const ths = headers.map(h =>
-        `<th style="text-align:left;padding:6px 10px;background:#eef2f7;font-weight:700;border-bottom:2px solid #d0d7e0;white-space:nowrap;font-size:0.8rem">${h}</th>`
-    ).join('');
+    if (!rows.length){
+        return '<p style="color:#888;font-style:italic;margin:4px 0">No records found.</p>';
+    }
+    const ths = headers.map(h => `<th style="text-align:left;padding:6px 10px;background:#eef2f7;font-weight:700;border-bottom:2px solid #d0d7e0;white-space:nowrap;font-size:0.8rem">${h}</th>`).join('');
     const trs = rows.map((r, i) =>
         `<tr style="background:${i % 2 ? '#fff' : '#fafbfc'}">${r.map(c =>
             `<td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:0.82rem;vertical-align:top">${(c === null || c === undefined || c === '') ? '<em style="color:#aaa">—</em>' : c}</td>`
@@ -21,7 +21,9 @@ function tbl(headers, rows) {
     return `<div style="overflow-x:auto;margin-top:6px"><table style="width:100%;border-collapse:collapse"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
 }
 
-function kv(pairs) { return tbl(['Field', 'Value'], pairs); }
+function kv(pairs) {
+    return tbl(['Field', 'Value'], pairs);
+}
 
 function show(box, html, isError) {
     box.innerHTML = `<div style="text-align:left;color:${isError ? '#b91c1c' : '#1e293b'}">${html}</div>`;
@@ -29,7 +31,9 @@ function show(box, html, isError) {
     box.style.background  = isError ? '#fff5f5' : '#f7f9fb';
 }
 
-function err(box, msg) { show(box, `<strong>Error:</strong> ${msg}`, true); }
+function err(box, msg) {
+    show(box, `<strong>Error:</strong> ${msg}`, true);
+}
 
 function loading(box) {
     box.innerHTML = '<span style="color:#2563a8;font-style:italic">Loading…</span>';
@@ -37,25 +41,37 @@ function loading(box) {
     box.style.background  = '#f7f9fb';
 }
 
-function nb(form) { return form.nextElementSibling; }
+function nb(form) {
+    return form.nextElementSibling;
+}
 
 function on(id, fn) {
     const el = document.getElementById(id);
-    if (el) el.closest('form').addEventListener('submit', e => { e.preventDefault(); fn(e); });
+    if (el){
+        el.closest('form').addEventListener('submit', e => { e.preventDefault(); fn(e); });
+    }
 }
 
 function isExpired(d) { return d && d !== '0000-00-00' && new Date(d) < new Date(); }
 
 function daysUntil(d) {
-    if (!d || d === '0000-00-00') return null;
+    if (!d || d === '0000-00-00'){
+        return null;
+    }
     return Math.ceil((new Date(d) - new Date()) / 86400000);
 }
 
 function statusBadge(expiry, refillsLeft) {
     const d = daysUntil(expiry);
-    if (d === null || d <= 0) return badge('Expired', '#dc2626');
-    if (refillsLeft <= 0)     return badge('No Refills', '#dc2626');
-    if (d <= 30)              return badge('Expiring Soon', '#d97706');
+    if (d === null || d <= 0){
+        return badge('Expired', '#dc2626');
+    }
+    if (refillsLeft <= 0){
+        return badge('No Refills', '#dc2626');
+    }     
+    if (d <= 30){
+        return badge('Expiring Soon', '#d97706');
+    }             
     return badge('Active', '#16a34a');
 }
 
@@ -63,7 +79,8 @@ async function apiFetch(params) {
     try {
         const res = await fetch(API + '?' + new URLSearchParams(params).toString());
         return await res.json();
-    } catch (e) {
+    }
+    catch (e) {
         return { error: 'Could not reach server. Is XAMPP running?' };
     }
 }
@@ -74,7 +91,8 @@ async function apiPost(action, body) {
         for (const [k, v] of Object.entries(body)) form.append(k, v);
         const res = await fetch(API + '?action=' + action, { method: 'POST', body: form });
         return await res.json();
-    } catch (e) {
+    }
+    catch (e) {
         return { error: 'Could not reach server. Is XAMPP running?' };
     }
 }
@@ -100,7 +118,9 @@ function checkInteractions(drugNames) {
                 (names[i].includes(ix.drug1) && names[j].includes(ix.drug2)) ||
                 (names[i].includes(ix.drug2) && names[j].includes(ix.drug1))
             );
-            if (m) hits.push({ ...m, a: drugNames[i], b: drugNames[j] });
+            if (m){
+                hits.push({ ...m, a: drugNames[i], b: drugNames[j] });
+            }
         }
     }
     return hits;
@@ -131,11 +151,9 @@ function staffHandlers() {
         if (data.error) { err(box, data.error); return; }
         if (!data.length) { err(box, 'No patients found matching your criteria.'); return; }
         show(box, `${data.length} patient(s) found:<br><br>` +
-            tbl(['ID', 'Name', 'DOB', 'Address', 'City', 'PostCode', 'Country', 'Prov', 'Phone', 'Email', 'Allergies', 'Medical History', 'Notes', 'PHN'],
+            tbl(['ID', 'Name', 'DOB', 'PHN'],
                 data.map(p => [
                     p.ID, `${p.Fname} ${p.Lname}`, p.DOB,
-                    p.St || '—', p.City || '—', p.PostCode || '—', p.Country || '—', p.Prov || '—',
-                    p.Phone || '—', p.Email || '—', p.Allergies || '—', p.Medical_History || '—', p.Notes || '—',
                     p.PHN || badge('No PHN', '#dc2626')
                 ])));
     });
@@ -288,6 +306,8 @@ function staffHandlers() {
         const rx = await apiFetch({ action: 'get_prescription', id });
         if (rx.error) { err(box, rx.error); return; }
         const days = daysUntil(rx.Expiry_Date);
+
+        // calculate the number of refills left
         const left = rx.Refills - rx.Refills_Used;
         show(box, kv([
             ['Prescription #',   rx.Prescription_ID],
@@ -377,25 +397,6 @@ function staffHandlers() {
             ]));
     });
 
-    // Dispense Medication — writes to DISPENSE table
-    on('disp-emp-id', async e => {
-        const empId = document.getElementById('disp-emp-id').value.trim();
-        const rxId  = document.getElementById('disp-rx-id').value.trim();
-        const pay   = document.getElementById('disp-pay').value;
-        const box   = nb(e.target);
-        loading(box);
-        const data = await apiPost('record_dispense', { emp_id: empId, rx_id: rxId, pay_method: pay });
-        if (data.error) { err(box, data.error); return; }
-        show(box, badge('Dispense Recorded in DB', '#16a34a') + '<br><br>' + kv([
-            ['Invoice No.',  data.invoice_no],
-            ['Date',         data.date],
-            ['Employee',     data.employee],
-            ['Prescription', '#' + data.rx_id],
-            ['Medication',   data.medication],
-            ['Cost',         data.cost ? '$' + parseFloat(data.cost).toFixed(2) : '—'],
-            ['Payment',      badge(data.pay_method, '#2563a8')],
-        ]));
-    });
 
     // Payment History
     on('bill-patient-id', async e => {
@@ -418,24 +419,6 @@ function staffHandlers() {
                 ])));
     });
 
-    // Staff Operations Log
-    on('staff-member', async e => {
-        const q    = document.getElementById('staff-member').value.trim();
-        const date = document.getElementById('staff-date').value;
-        const box  = nb(e.target);
-        loading(box);
-        const data = await apiFetch({ action: 'staff_log', q, date });
-        if (data.error) { err(box, data.error); return; }
-        if (!data.length) { err(box, 'No dispense records found.'); return; }
-        show(box, `${data.length} record(s):<br><br>` +
-            tbl(['Invoice', 'Date', 'Employee', 'Role', 'Rx #', 'Medication', 'Strength', 'Payment'],
-                data.map(r => [
-                    r.Invoice_No, r.Date_Of_Invoice,
-                    `${r.Fname} ${r.Lname}`, badge(r.Role, '#2563a8'),
-                    r.Prescription_ID, r.Drug_Name, r.Strength,
-                    badge(r.Pay_Method, '#555')
-                ])));
-    });
 
     // Stock Check — columns: ID, Drug_Name, Strength, Stock_Qty, Qty_per_unit, DIN
     on('inv-drug-name', async e => {
@@ -513,14 +496,32 @@ function staffHandlers() {
         const box      = nb(e.target);
         if (!drug || !qty) { err(box, 'Please enter a medication name and quantity.'); return; }
         show(box, badge('Order Submitted', '#16a34a') + '<br><br>' + kv([
-            ['Order ID',       'ORD-' + String(Date.now()).slice(-5)],
-            ['Medication',     drug],
-            ['Quantity',       qty + ' units'],
-            ['Vendor',         selEl.options[selEl.selectedIndex].text],
-            ['Priority',       badge(priority === 'urgent' ? 'Urgent' : 'Standard', priority === 'urgent' ? '#d97706' : '#2563a8')],
-            ['Est. Delivery',  priority === 'urgent' ? '24–48 hours' : '3–5 business days'],
-            ['Submitted',      new Date().toLocaleDateString('en-CA')],
+            ['Order ID',      'ORD-' + String(Date.now()).slice(-5)],
+            ['Medication',    drug],
+            ['Quantity',      qty + ' units'],
+            ['Vendor',        selEl.options[selEl.selectedIndex].text],
+            ['Priority',      badge(priority === 'urgent' ? 'Urgent' : 'Standard', priority === 'urgent' ? '#d97706' : '#2563a8')],
+            ['Est. Delivery', priority === 'urgent' ? '24–48 hours' : '3–5 business days'],
+            ['Submitted',     new Date().toLocaleDateString('en-CA')],
         ]));
+    });
+
+    // All Employees
+    document.getElementById('all-employees-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const box = e.target.nextElementSibling;
+        loading(box);
+        const data = await apiFetch({ action: 'all_employees' });
+        if (data.error) { err(box, data.error); return; }
+        show(box, `${data.length} employee(s):<br><br>` +
+            tbl(['ID', 'Name', 'Role', 'Phone', 'Email'],
+                data.map(emp => [
+                    emp.ID,
+                    `${emp.Fname} ${emp.Lname}`,
+                    badge(emp.Role, emp.Role === 'Pharmacist' ? '#16a34a' : emp.Role === 'Technician' ? '#7c3aed' : '#2563a8'),
+                    emp.Phone || '—',
+                    emp.Email || '—',
+                ])));
     });
 
     // Medication Pickup Check
@@ -547,6 +548,7 @@ function staffHandlers() {
                     i % 3 !== 0 ? badge('Ready for Pickup', '#16a34a') : badge('Being Prepared', '#d97706')
                 ])));
     });
+
 }
 
 // ── PATIENT PORTAL ───────────────────────────────────────────────────────────
@@ -560,7 +562,7 @@ function patientHandlers() {
         loading(box);
         const data = await apiFetch({ action: 'patient_prescriptions', q });
         if (data.error) { err(box, data.error); return; }
-        show(box, `<strong>${data.patient_name}</strong> — ${data.rows.length} prescription(s)<br><br>` +
+        show(box, `<strong>${data.patient_name}</strong> has ${data.rows.length} prescription(s)<br><br>` +
             tbl(['Rx #', 'Medication', 'Strength', 'Doctor', 'Issued', 'Expiry', 'Status'],
                 data.rows.map(r => [
                     r.Prescription_ID, r.Drug_Name, r.Strength,
