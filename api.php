@@ -236,27 +236,7 @@ switch ($action) {
         );
         echo json_encode($result->fetch_all(MYSQLI_ASSOC));
         break;
-    // -- Aggregation Queries:
-    case 'avg_med_cost':
-    $result = $conn->query(
-        "SELECT AVG(Cost) AS avg_cost
-         FROM medications"
-    );
 
-    echo json_encode($result->fetch_assoc());
-    break;
-
-    case 'prescription_count_per_patient':
-    $result = $conn->query(
-        "SELECT pt.ID, pt.Fname, pt.Lname, COUNT(*) AS total_prescriptions
-         FROM prescriptions p
-         JOIN patients pt ON pt.ID = p.Patient_ID
-         GROUP BY pt.ID, pt.Fname, pt.Lname
-         ORDER BY total_prescriptions DESC"
-    );
-
-    echo json_encode($result->fetch_all(MYSQLI_ASSOC));
-    break;
 
     // verify patients' insurance coverage for a specific medication for "Coverage Eligibility" feature
     // meets the requirement for Join query
@@ -350,6 +330,23 @@ switch ($action) {
                     WHERE ID = $id");
 
         echo json_encode(['success' => "Patient {$patient['Fname']} {$patient['Lname']} updated successfully."]);
+        break;
+
+    // find vendors that supply every medication
+    // meets the requirement of Division query
+    case 'full_coverage_vendors':
+        $result = $conn->query(
+            "SELECT v.VendorID, v.Name
+             FROM Vendors v
+             WHERE NOT EXISTS (
+                 SELECT m.ID FROM Medications m
+                 WHERE NOT EXISTS (
+                     SELECT * FROM Supplied_By sb
+                     WHERE sb.VendID = v.VendorID AND sb.MedID = m.ID
+                 )
+             )"
+        );
+        echo json_encode($result->fetch_all(MYSQLI_ASSOC));
         break;
 
     // retrieve all employees for "All Employees" features

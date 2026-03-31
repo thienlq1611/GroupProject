@@ -397,6 +397,18 @@ function staffHandlers() {
         ]));
     });
 
+    // Full-Coverage Vendors (division query)
+    document.getElementById('full-coverage-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const box = e.target.nextElementSibling;
+        loading(box);
+        const data = await apiFetch({ action: 'full_coverage_vendors' });
+        if (data.error) { err(box, data.error); return; }
+        if (!data.length) { show(box, 'No vendors supply all medications.'); return; }
+        show(box, `${data.length} vendor(s) supply all medications:<br><br>` +
+            tbl(['ID', 'Vendor Name'], data.map(v => [v.VendorID, v.Name])));
+    });
+
     // High-Volume Patients (nested aggregation with GROUP BY)
     document.getElementById('high-volume-form').addEventListener('submit', async e => {
         e.preventDefault();

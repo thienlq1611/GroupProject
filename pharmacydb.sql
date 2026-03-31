@@ -242,6 +242,14 @@ CREATE TABLE Prescribe_For (
   FOREIGN KEY (PrescriptionID) REFERENCES Prescriptions(Prescription_ID)
 );
 
+CREATE TABLE Supplied_By (
+  MedID INT,
+  VendID INT,
+  PRIMARY KEY ( MedID, VendID),
+  FOREIGN KEY (MedID) REFERENCES Medications(ID),
+  FOREIGN KEY (VendID) REFERENCES Vendor(ID)
+);
+
 -- DATA insertions:
 
 INSERT INTO Doctors (Fname, Lname, Specialty) VALUES 
@@ -305,9 +313,9 @@ INSERT INTO Dependents (PatID, Name, DOB, Allergies, Medical_History) VALUES
 (3, 'Emma', '2014-06-18', 'None', 'Healthy');
 
 INSERT INTO Medications (Drug_Name, Manufacturer, Strength, Cost, DIN, Qty_per_unit, Stock_Qty) VALUES 
-('Tylenol', 'Johnson & Johnson', '500mg', 9.99, 10000000, 15, 200), 
-('Advil', 'Pfizer', '200mg', 12.50, 10000001, 10, 150), 
-('Aspirin', 'Bayer', '325mg', 8.75, 10000002, 25, 400), 
+('Acetominophen (Tylenol)', 'Johnson & Johnson', '500mg', 9.99, 10000000, 15, 200), 
+('ibuprofen (Advil)', 'Pfizer', '200mg', 12.50, 10000001, 10, 150), 
+('Acetylsalicylic acid (Aspirin)', 'Bayer', '325mg', 8.75, 10000002, 25, 400), 
 ('Amoxicillin', 'Teva', '250mg', 15.20, 10000003, 30, 500), 
 ('Metformin', 'Sandoz', '500mg', 11.30, 10000004, 12, 180), 
 ('Hydrocortisone Cream', 'Pfizer', '1% topical cream', 12.99, 10000005, 35, 300), 
@@ -318,7 +326,10 @@ INSERT INTO Medications (Drug_Name, Manufacturer, Strength, Cost, DIN, Qty_per_u
 ('Alendronate', 'Merck', '70mg tablet', 38.99, 10000010, 14, 240), 
 ('Adalimumab', 'AbbVie', '40mg/0.8ml injection', 1850.00, 10000011, 28, 450), 
 ('Lactase Enzyme', 'Kirkland', '9000 FCC units capsule', 18.99, 10000012, 35, 600), 
-('Diphenhydramine', 'Benadryl', '25mg tablet', 9.99, 10000013, 20, 300);
+('Diphenhydramine (Benedryl)', 'Kenvue Inc', '25mg tablet', 9.99, 10000013, 20, 300),
+('Lisinopril', 'Mylan', '50mg tablet', 20.49, 10000435, 16, 261), 
+('Lisinopril', 'Mylan', '100mg tablet', 30.49, 10012435, 16, 261),
+
 
 INSERT INTO Prescriptions (Instructions, Refills, Date_Issued, Expiry_Date, Patient_ID) VALUES 
 ('Apply a thin layer to affected area twice daily. Avoid contact with eyes.', 3, '2024-01-15', '2025-01-15', 1), 
@@ -409,3 +420,49 @@ INSERT INTO Prescribe_For (DoctorID, PrescriptionID) VALUES
 (3, 9);
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+INSERT INTO Supplied_By (MedID, VendID) VALUES 
+(1,1),
+(2,1),
+(3,1),
+(4,1), 
+(5,1),
+(6,1),
+(7,1),
+(8,1),
+(9,1),
+(10,1),
+(11,1),
+(12,1),
+(13,1),
+(14,1),
+(15,1),
+(16,1),
+(1,2),
+(2,2),
+(6,2),
+(5,2),
+(14,2),
+(13,2),
+(7,2),
+(1,2),
+(1,3),
+(2,3),
+(3,3),
+(4,3), 
+(5,3),
+(6,3),
+(7,3),
+(8,3),
+(9,3),
+(10,3),
+(11,3),
+(12,3),
+(13,3),
+(14,3),
+(15,3),
+(16,3),
+(15,2),
+(10,2),
+(11,2),
+(16,2);
