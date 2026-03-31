@@ -198,53 +198,19 @@ function staffHandlers() {
         show(box, html);
     });
 
-    // Patient Medical Records
+    // Patient Medical Records (projection — SQL SELECT columns change based on user choice)
     on('record-id', async e => {
         const q    = document.getElementById('record-id').value.trim();
         const type = document.getElementById('record-type').value;
         const box  = nb(e.target);
+        if (!q) { err(box, 'Please enter a Patient ID.'); return; }
         loading(box);
 
-        const [p, rxData] = await Promise.all([
-            apiFetch({ action: 'get_patient', q }),
-            apiFetch({ action: 'patient_prescriptions', q }),
-        ]);
-        if (p.error) { err(box, p.error); return; }
+        const data = await apiFetch({ action: 'patient_records', q, type });
+        if (data.error) { err(box, data.error); return; }
 
-        let html = `<strong>${p.Fname} ${p.Lname} — Patient ID ${p.ID}</strong><br><br>`;
-
-        if (type === 'all' || type === 'history') {
-            html += `<strong>Allergies:</strong> ${p.Allergies || 'None'}<br>`;
-            html += `<strong>Medical History:</strong> ${p.Medical_History || 'None'}<br>`;
-            if (p.Notes) html += `<strong>Notes:</strong> ${p.Notes}<br>`;
-            if ((p.dependents || []).length) {
-                html += '<br><strong>Dependents</strong><br>' +
-                    tbl(['Name', 'DOB', 'Allergies', 'Medical History'],
-                        p.dependents.map(d => [d.Name, d.DOB, d.Allergies || 'None', d.Medical_History || 'None']));
-            }
-            html += '<br>';
-        }
-        if ((type === 'all' || type === 'medications') && !rxData.error) {
-            html += '<strong>Prescriptions</strong><br>' +
-                tbl(['Rx #', 'Medication', 'Strength', 'Issued', 'Expiry', 'Status', 'Instructions'],
-                    rxData.rows.map(r => [
-                        r.Prescription_ID, r.Drug_Name, r.Strength,
-                        r.Date_Issued, r.Expiry_Date,
-                        isExpired(r.Expiry_Date) ? badge('Expired', '#dc2626') : badge('Active', '#16a34a'),
-                        r.Instructions
-                    ])) + '<br>';
-        }
-        if ((type === 'all' || type === 'physician') && !rxData.error) {
-            const docs = [...new Map(
-                rxData.rows.filter(r => r.Doc_Lname)
-                    .map(r => [r.Doc_Lname, r])
-            ).values()];
-            html += '<strong>Prescribing Physicians</strong><br>' +
-                tbl(['Name', 'Specialty'],
-                    docs.length ? docs.map(r => [`Dr. ${r.Doc_Fname} ${r.Doc_Lname}`, r.Specialty || '—'])
-                                : [['None on file', '']]);
-        }
-        show(box, html);
+        const labels = { Fname: 'First Name', Lname: 'Last Name', DOB: 'Date of Birth', Phone: 'Phone', Email: 'Email', City: 'City', Allergies: 'Allergies', Medical_History: 'Medical History' };
+        show(box, kv(Object.entries(data).map(([k, v]) => [labels[k] || k, v || '—'])));
     });
 
     // Coverage Eligibility
@@ -271,32 +237,6 @@ function staffHandlers() {
             '<br><br>' + tbl(['Insurer', 'Policy No.', 'Member ID', 'Type', 'Coverage'], rows));
     });
 
-    // Coverage Limits
-    on('limit-policy', async e => {
-        const policy = document.getElementById('limit-policy').value.trim();
-        const din    = document.getElementById('limit-din').value.trim();
-        const box    = nb(e.target);
-        loading(box);
-        const data = await apiFetch({ action: 'coverage_limits', policy, din });
-        if (data.error) { err(box, data.error); return; }
-        const { policy: pol, medication: med } = data;
-        const pct = INS_RATE[parseInt(pol.InsID)] || 70;
-        show(box, kv([
-            ['Insurer',       pol.Iname],
-            ['Policy No.',    pol.PolicyNo],
-            ['Member',        `${pol.Fname} ${pol.Lname}`],
-            ['Coverage Type', badge(pol.CoverageType, pol.CoverageType === 'Primary' ? '#2563a8' : '#7c3aed')],
-            ['Coverage Rate', `${pct}%`],
-            ['Annual Maximum','$2,500'],
-            ['Plan Notes',    pol.PlanNotes || '—'],
-            ...(med ? [
-                ['Drug',         `${med.Drug_Name} (${med.Strength})`],
-                ['Drug Cost',    `$${parseFloat(med.Cost).toFixed(2)}`],
-                ['Patient Pays', `$${(med.Cost * (1 - pct / 100)).toFixed(2)}`],
-                ['Plan Pays',    `$${(med.Cost * pct / 100).toFixed(2)}`],
-            ] : []),
-        ]));
-    });
 
     // Track Prescription — columns: Prescription_ID, Fname, Lname, Drug_Name, Strength, Doc_Fname, Doc_Lname
     on('track-rx-id', async e => {
@@ -346,56 +286,7 @@ function staffHandlers() {
                 ])));
     });
 
-    // Process Refill
-    on('refill-last-name', async e => {
-        const lname = document.getElementById('refill-last-name').value.trim();
-        const rxId  = document.getElementById('refill-rx-id').value.trim();
-        const box   = nb(e.target);
-        loading(box);
-        const rx = await apiFetch({ action: 'get_prescription', id: rxId });
-        if (rx.error) { err(box, rx.error); return; }
-        if (lname && rx.Lname.toLowerCase() !== lname.toLowerCase()) {
-            err(box, `Last name "${lname}" does not match prescription record.`); return;
-        }
-        if (isExpired(rx.Expiry_Date)) {
-            err(box, `Prescription #${rx.Prescription_ID} expired on ${rx.Expiry_Date}. A new prescription is required.`); return;
-        }
-        const left = rx.Refills - rx.Refills_Used;
-        if (left <= 0) {
-            err(box, `No refills remaining for Prescription #${rx.Prescription_ID}. Contact prescribing physician.`); return;
-        }
-        show(box, badge('Refill Approved', '#16a34a') + '<br><br>' + kv([
-            ['Prescription #',        rx.Prescription_ID],
-            ['Patient',               `${rx.Fname} ${rx.Lname}`],
-            ['Medication',            `${rx.Drug_Name} (${rx.Strength})`],
-            ['Refills Remaining',     `${left} of ${rx.Refills} (${left - 1} after this refill)`],
-            ['Expiry Date',           rx.Expiry_Date],
-            ['Instructions',          rx.Instructions],
-        ]));
-    });
 
-    // Dosage Verification
-    on('dose-rx-id', async e => {
-        const rxId      = document.getElementById('dose-rx-id').value.trim();
-        const dispensed = document.getElementById('dose-dispensed').value.trim().toLowerCase();
-        const box       = nb(e.target);
-        loading(box);
-        const rx = await apiFetch({ action: 'get_prescription', id: rxId });
-        if (rx.error) { err(box, rx.error); return; }
-        const prescribed = rx.Strength.toLowerCase();
-        const match = !dispensed || prescribed.includes(dispensed) || dispensed.includes(prescribed);
-        show(box,
-            (match ? badge('Verified', '#16a34a') : badge('Mismatch — Do Not Dispense', '#dc2626')) +
-            '<br><br>' + kv([
-                ['Prescription #',   rx.Prescription_ID],
-                ['Patient',          `${rx.Fname} ${rx.Lname}`],
-                ['Medication',       rx.Drug_Name],
-                ['Prescribed Strength', rx.Strength],
-                ['Dispensed Strength',  dispensed || '(not entered)'],
-                ['Instructions',     rx.Instructions],
-                ['Verdict',          match ? badge('Strength Matches', '#16a34a') : badge('Strength Mismatch', '#dc2626')],
-            ]));
-    });
 
 
     // Payment History
@@ -506,6 +397,50 @@ function staffHandlers() {
         ]));
     });
 
+    // High-Volume Patients (nested aggregation with GROUP BY)
+    document.getElementById('high-volume-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const box = e.target.nextElementSibling;
+        loading(box);
+        const data = await apiFetch({ action: 'high_volume_patients' });
+        if (data.error) { err(box, data.error); return; }
+        if (!data.length) { show(box, 'No patients exceed the average prescription count.'); return; }
+        show(box, `${data.length} patient(s) above average:<br><br>` +
+            tbl(['ID', 'Name', 'Prescriptions'],
+                data.map(p => [
+                    p.ID,
+                    `${p.Fname} ${p.Lname}`,
+                    p.Prescription_Count,
+                ])));
+    });
+
+    // Delete Patient
+    document.getElementById('delete-patient-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id  = document.getElementById('delete-patient-id').value.trim();
+        const box = e.target.nextElementSibling;
+        if (!id) { err(box, 'Please enter a Patient ID.'); return; }
+        loading(box);
+        const data = await apiFetch({ action: 'delete_patient', id });
+        if (data.error) { err(box, data.error); return; }
+        show(box, badge('Deleted', '#dc2626') + ' ' + data.success);
+    });
+
+    // Update Patient
+    document.getElementById('update-patient-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id    = document.getElementById('update-patient-id').value.trim();
+        const phone = document.getElementById('update-phone').value.trim();
+        const email = document.getElementById('update-email').value.trim();
+        const city  = document.getElementById('update-city').value.trim();
+        const box   = e.target.nextElementSibling;
+        if (!id) { err(box, 'Please enter a Patient ID.'); return; }
+        loading(box);
+        const data = await apiFetch({ action: 'update_patient', id, phone, email, city });
+        if (data.error) { err(box, data.error); return; }
+        show(box, badge('Updated', '#16a34a') + ' ' + data.success);
+    });
+
     // All Employees
     document.getElementById('all-employees-form').addEventListener('submit', async e => {
         e.preventDefault();
@@ -524,30 +459,6 @@ function staffHandlers() {
                 ])));
     });
 
-    // Medication Pickup Check
-    on('pickup-last-name', async e => {
-        const lname = document.getElementById('pickup-last-name').value.trim();
-        const dob   = document.getElementById('pickup-dob').value;
-        const box   = nb(e.target);
-        if (!lname) { err(box, 'Please enter a last name.'); return; }
-        loading(box);
-        const data = await apiFetch({ action: 'find_patient', name: lname, dob, city: '' });
-        if (data.error || !data.length) {
-            err(box, 'No patient found with that last name and date of birth.'); return;
-        }
-        const rxData = await apiFetch({ action: 'patient_prescriptions', q: String(data[0].ID) });
-        if (rxData.error || !rxData.rows.length) {
-            err(box, `No prescriptions on file for ${data[0].Fname} ${data[0].Lname}.`); return;
-        }
-        const active = rxData.rows.filter(r => !isExpired(r.Expiry_Date));
-        show(box,
-            `<strong>${data[0].Fname} ${data[0].Lname}</strong> — Pickup Status<br><br>` +
-            tbl(['Rx #', 'Medication', 'Strength', 'Expiry', 'Status'],
-                active.map((r, i) => [
-                    r.Prescription_ID, r.Drug_Name, r.Strength, r.Expiry_Date,
-                    i % 3 !== 0 ? badge('Ready for Pickup', '#16a34a') : badge('Being Prepared', '#d97706')
-                ])));
-    });
 
 }
 

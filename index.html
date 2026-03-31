@@ -64,19 +64,18 @@
             <!-- Patient Medical Records -->
             <div class="query-card">
                 <div class="query-header"><h2>Patient Medical Records</h2></div>
-                <p class="query-desc">Retrieve a patient's medical history, allergies, dependents, and prescribing physicians.</p>
+                <p class="query-desc">Choose which fields to retrieve for a patient.</p>
                 <form class="query-form">
                     <div class="form-group">
-                        <label for="record-id">Patient ID or Name</label>
-                        <input type="text" id="record-id" placeholder="e.g. 6  or  Ayden Watt">
+                        <label for="record-id">Patient ID</label>
+                        <input type="text" id="record-id" placeholder="e.g. 1">
                     </div>
                     <div class="form-group">
-                        <label for="record-type">Record Type</label>
+                        <label for="record-type">Fields to Show</label>
                         <select id="record-type">
-                            <option value="all">All Records</option>
-                            <option value="history">Allergies &amp; Medical History</option>
-                            <option value="medications">Prescriptions</option>
-                            <option value="physician">Prescribing Physicians</option>
+                            <option value="all">All Fields</option>
+                            <option value="contact">Contact Info (Phone, Email, City)</option>
+                            <option value="medical">Medical (Allergies, Medical History)</option>
                         </select>
                     </div>
                     <button type="submit" class="btn-query">Retrieve Records</button>
@@ -87,10 +86,9 @@
             <!-- Coverage Eligibility -->
             <div class="query-card">
                 <div class="query-header"><h2>Insurance Coverage Eligibility</h2></div>
-                <p class="query-desc">Check whether a patient has active insurance coverage and whether a specific medication is covered under their plan.</p>
                 <form class="query-form">
                     <div class="form-group">
-                        <label for="elig-patient-id">Patient ID or Name</label>
+                        <label for="elig-patient-id">Patient ID or Last Name</label>
                         <input type="text" id="elig-patient-id" placeholder="e.g. 3  or  Raymond Yao">
                     </div>
                     <div class="form-group">
@@ -102,23 +100,6 @@
                 <div class="result-placeholder"><span>Coverage details will appear here</span></div>
             </div>
 
-            <!-- Coverage Limits -->
-            <div class="query-card">
-                <div class="query-header"><h2>Coverage Limits &amp; Benefits</h2></div>
-                <p class="query-desc">View co-pay amounts and plan limits for a specific insurance policy. Optionally check coverage for a specific drug.</p>
-                <form class="query-form">
-                    <div class="form-group">
-                        <label for="limit-policy">Policy Number</label>
-                        <input type="text" id="limit-policy" placeholder="e.g. 1  through  7">
-                    </div>
-                    <div class="form-group">
-                        <label for="limit-din">DIN or Medication Name (optional)</label>
-                        <input type="text" id="limit-din" placeholder="e.g. 2381494  or  Humira">
-                    </div>
-                    <button type="submit" class="btn-query">View Coverage</button>
-                </form>
-                <div class="result-placeholder"><span>Coverage limits will appear here</span></div>
-            </div>
 
                 <!-- Payment History -->
             <div class="query-card">
@@ -177,55 +158,19 @@
                 <div class="result-placeholder"><span>Prescription history will appear here</span></div>
             </div>
 
-            <!-- Process Refill -->
-            <div class="query-card">
-                <div class="query-header"><h2>Process Refill</h2></div>
-                <p class="query-desc">Process a refill for a patient. Confirm last name matches before approving. Checks expiry and remaining refills automatically.</p>
-                <form class="query-form">
-                    <div class="form-group">
-                        <label for="refill-last-name">Patient Last Name</label>
-                        <input type="text" id="refill-last-name" placeholder="e.g. Watt">
-                    </div>
-                    <div class="form-group">
-                        <label for="refill-rx-id">Prescription ID</label>
-                        <input type="text" id="refill-rx-id" placeholder="e.g. 8">
-                    </div>
-                    <button type="submit" class="btn-query">Process Refill</button>
-                </form>
-                <div class="result-placeholder"><span>Refill confirmation will appear here</span></div>
-            </div>
 
-            <!-- Dosage Verification -->
-            <div class="query-card">
-                <div class="query-header"><h2>Dosage Verification</h2></div>
-                <p class="query-desc">Verify the dispensed dosage matches the prescription on file before releasing the medication to the patient.</p>
-                <form class="query-form">
-                    <div class="form-group">
-                        <label for="dose-rx-id">Prescription ID</label>
-                        <input type="text" id="dose-rx-id" placeholder="e.g. 5">
-                    </div>
-                    <div class="form-group">
-                        <label for="dose-dispensed">Dosage Being Dispensed</label>
-                        <input type="text" id="dose-dispensed" placeholder="e.g. 10mg tablet">
-                    </div>
-                    <button type="submit" class="btn-query">Verify Dosage</button>
-                </form>
-                <div class="result-placeholder"><span>Verification result will appear here</span></div>
-            </div>
+
 
         </div>
 
         <!-- ── DISPENSING & INVENTORY ──────────────────────────── -->
         <div class="staff-col" id="dispensing">
-            <div class="col-header">Dispensing &amp; Inventory</div>
-
-
+            <div class="col-header">Inventory</div>
 
 
             <!-- Check Medication Stock -->
             <div class="query-card">
-                <div class="query-header"><h2>Medication Stock Check</h2></div>
-                <p class="query-desc">Look up current stock quantity for any medication by name or DIN. Based on the MEDICATIONS table.</p>
+                <div class="query-header"><h2>Medication Inventory</h2></div>
                 <form class="query-form">
                     <div class="form-group">
                         <label for="inv-drug-name">Medication Name or DIN</label>
@@ -236,23 +181,6 @@
                 <div class="result-placeholder"><span>Stock status will appear here</span></div>
             </div>
 
-            <!-- Medication Pickup Check -->
-            <div class="query-card">
-                <div class="query-header"><h2>Medication Pickup Check</h2></div>
-                <p class="query-desc">Confirm whether a patient's prescription is ready for pickup by entering their last name and date of birth.</p>
-                <form class="query-form">
-                    <div class="form-group">
-                        <label for="pickup-last-name">Patient Last Name</label>
-                        <input type="text" id="pickup-last-name" placeholder="e.g. Tokushige">
-                    </div>
-                    <div class="form-group">
-                        <label for="pickup-dob">Date of Birth</label>
-                        <input type="date" id="pickup-dob">
-                    </div>
-                    <button type="submit" class="btn-query">Check Pickup Status</button>
-                </form>
-                <div class="result-placeholder"><span>Pickup status will appear here</span></div>
-            </div>
 
         </div>
 
@@ -260,10 +188,58 @@
         <div class="staff-col" id="reports">
             <div class="col-header">Reports &amp; Admin</div>
 
+            <!-- High-Volume Patients -->
+            <div class="query-card">
+                <div class="query-header"><h2>High-Volume Patients</h2></div>
+                <p class="query-desc">List patients who have more prescriptions than the average.</p>
+                <form class="query-form" id="high-volume-form">
+                    <button type="submit" class="btn-query">Find High-Volume Patients</button>
+                </form>
+                <div class="result-placeholder"><span>Results will appear here</span></div>
+            </div>
+
+            <!-- Delete Patient -->
+            <div class="query-card">
+                <div class="query-header"><h2>Delete Patient</h2></div>
+                <form class="query-form" id="delete-patient-form">
+                    <div class="form-group">
+                        <label for="delete-patient-id">Patient ID</label>
+                        <input type="text" id="delete-patient-id" placeholder="e.g. 3">
+                    </div>
+                    <button type="submit" class="btn-query" style="background:#dc2626">Delete Patient</button>
+                </form>
+                <div class="result-placeholder"><span>Result will appear here</span></div>
+            </div>
+
+            <!-- Update Patient -->
+            <div class="query-card">
+                <div class="query-header"><h2>Update Patient</h2></div>
+                <form class="query-form" id="update-patient-form">
+                    <div class="form-group">
+                        <label for="update-patient-id">Patient ID</label>
+                        <input type="text" id="update-patient-id" placeholder="e.g. 2">
+                    </div>
+                    <div class="form-group">
+                        <label for="update-phone">Phone</label>
+                        <input type="text" id="update-phone" placeholder="e.g. 604-555-0199">
+                    </div>
+                    <div class="form-group">
+                        <label for="update-email">Email</label>
+                        <input type="text" id="update-email" placeholder="e.g. new@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="update-city">City</label>
+                        <input type="text" id="update-city" placeholder="e.g. Vancouver">
+                    </div>
+                    <button type="submit" class="btn-query">Update Patient</button>
+                </form>
+                <div class="result-placeholder"><span>Result will appear here</span></div>
+            </div>
+
             <!-- ALL EMPLOYEES -->
             <div class="query-card">
                 <div class="query-header"><h2>All Employees</h2></div>
-                <p class="query-desc">View all pharmacy staff — name, role, phone, and email. Based on the EMPLOYEES table.</p>
+                <p class="query-desc">View all pharmacy staff.</p>
                 <form class="query-form" id="all-employees-form">
                     <button type="submit" class="btn-query">View All Employees</button>
                 </form>

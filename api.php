@@ -72,7 +72,32 @@ switch ($action) {
         echo json_encode($patient);
         break;
 
+    // retrieve patient personal information or medical record for "Patient Medical Records" feature
+    // meets the requirement of Projection query
+    case 'patient_records':
+        $q    = $conn->real_escape_string($_GET['q']    ?? '');
+        $type = $_GET['type'] ?? 'all';
+
+        if ($type === 'contact') {
+            $select = "Fname, Lname, Phone, Email, City";
+        } elseif ($type === 'medical') {
+            $select = "Fname, Lname, Allergies, Medical_History";
+        } else {
+            $select = "Fname, Lname, DOB, Phone, Email, City, Allergies, Medical_History";
+        }
+
+        $result = $conn->query("SELECT $select 
+                                FROM patients 
+                                WHERE ID = '$q'");
+
+        if (!$result) { echo json_encode(['error' => "Patient \"$q\" not found."]); break; }
+        $row = $result->fetch_assoc();
+        if (!$row) { echo json_encode(['error' => "Patient \"$q\" not found."]); break; }
+        echo json_encode($row);
+        break;
+
     // retrieve prescriptions details for "Track Prescription" feature
+    // meets the requirement of Join query
     case 'get_prescription':
         $id = (int)($_GET['id'] ?? 0);
 
@@ -88,9 +113,9 @@ switch ($action) {
              ON c.Prescription_ID = p.Prescription_ID
              JOIN medications m
              ON m.ID = c.ID
-             LEFT JOIN prescribe_for pf
+             JOIN prescribe_for pf
              ON pf.PrescriptionID = p.Prescription_ID
-             LEFT JOIN doctors d
+             JOIN doctors d
              ON d.ID = pf.DoctorID
              WHERE p.Prescription_ID = $id
              LIMIT 1"
@@ -114,6 +139,7 @@ switch ($action) {
         break;
 
     // Retrieves all prescriptions for a patient for "Prescription History" feature
+    // meets the requirement of Selection query
     case 'patient_prescriptions':
         $q = $conn->real_escape_string($_GET['q'] ?? '');
 
@@ -180,10 +206,14 @@ switch ($action) {
                     m.Drug_Name, m.Strength, m.Cost,
                     e.Fname AS Emp_Fname, e.Lname AS Emp_Lname
              FROM dispense d
-             JOIN prescriptions p ON p.Prescription_ID = d.Prescription_ID
-             JOIN contains c      ON c.Prescription_ID = p.Prescription_ID
-             JOIN medications m   ON m.ID = c.ID
-             JOIN employees e     ON e.ID = d.EmpID
+             JOIN prescriptions p 
+             ON p.Prescription_ID = d.Prescription_ID
+             JOIN contains c
+             ON c.Prescription_ID = p.Prescription_ID
+             JOIN medications m
+             ON m.ID = c.ID
+             JOIN employees e
+             ON e.ID = d.EmpID
              WHERE p.Patient_ID = $pid
              ORDER BY d.Date_Of_Invoice DESC"
         );
@@ -191,15 +221,18 @@ switch ($action) {
         break;
 
 
-    // ── MEDICATION SEARCH ─────────────────────────────────────────────────────
-    // PROJECTION + SELECTION with LIKE: search medications by name, DIN, or strength
+    // retrieves medication inventory for "Medication Inventory" feature
+    // meets the requirement for Aggregation query
     case 'medication_search':
         $q = '%' . $conn->real_escape_string($_GET['q'] ?? '') . '%';
 
         $result = $conn->query(
             "SELECT ID, Drug_Name, Manufacturer, Strength, Cost, DIN, Stock_Qty, Qty_per_unit
-             FROM medications
-             WHERE Drug_Name LIKE '$q' OR DIN LIKE '$q' OR Strength LIKE '$q'"
+            FROM medications
+            WHERE (Drug_Name LIKE '$q' OR DIN LIKE '$q')
+            AND Stock_Qty = (SELECT MAX(Stock_Qty)
+                            FROM medications)"
+            
         );
         echo json_encode($result->fetch_all(MYSQLI_ASSOC));
         break;
@@ -225,8 +258,8 @@ switch ($action) {
     echo json_encode($result->fetch_all(MYSQLI_ASSOC));
     break;
 
-    // ── COVERAGE ELIGIBILITY ──────────────────────────────────────────────────
-    // JOIN: joins is_insured and insurance tables to check patient coverage
+    // verify patients' insurance coverage for a specific medication for "Coverage Eligibility" feature
+    // meets the requirement for Join query
     case 'coverage_eligibility':
         $q   = $conn->real_escape_string($_GET['q']   ?? '');
         $din = $conn->real_escape_string($_GET['din'] ?? '');
@@ -234,7 +267,8 @@ switch ($action) {
         $patient = $conn->query(
             "SELECT ID, Fname, Lname
              FROM patients
-             WHERE ID = '$q' OR PHN = '$q' OR Lname = '$q' OR CONCAT(Fname, ' ', Lname) = '$q'"
+             WHERE ID = '$q' OR Lname = '$q'"
+
         )->fetch_assoc();
         if (!$patient) { echo json_encode(['error' => "Patient \"$q\" not found."]); break; }
 
@@ -243,7 +277,8 @@ switch ($action) {
         $result = $conn->query(
             "SELECT i.Iname, ii.PolicyNo, ii.MemberID, ii.Notes AS CoverageType
              FROM is_insured ii
-             JOIN insurance i ON i.ID = ii.InsID
+             JOIN insurance i
+             ON i.ID = ii.InsID
              WHERE ii.PatID = $pid"
         );
         $coverage = $result->fetch_all(MYSQLI_ASSOC);
@@ -261,43 +296,71 @@ switch ($action) {
         echo json_encode(['patient' => $patient, 'coverage' => $coverage, 'medication' => $med]);
         break;
 
-    // ── COVERAGE LIMITS ───────────────────────────────────────────────────────
-    // JOIN: joins is_insured, insurance, and patients by policy number
-    case 'coverage_limits':
-        $policy = $conn->real_escape_string($_GET['policy'] ?? '');
-        $din    = $conn->real_escape_string($_GET['din']    ?? '');
 
-        $row = $conn->query(
-            "SELECT ii.PolicyNo, ii.MemberID, ii.Notes AS CoverageType,
-                    i.Iname, i.Notes AS PlanNotes,
-                    p.Fname, p.Lname
-             FROM is_insured ii
-             JOIN insurance i ON i.ID = ii.InsID
-             JOIN patients p  ON p.ID = ii.PatID
-             WHERE ii.PolicyNo = '$policy'"
-        )->fetch_assoc();
-        if (!$row) { echo json_encode(['error' => "Policy \"$policy\" not found."]); break; }
-
-        $med = null;
-        if ($din !== '') {
-            $med = $conn->query(
-                "SELECT Drug_Name, Strength, Cost
-                 FROM medications
-                 WHERE DIN = '$din' OR Drug_Name LIKE '%$din%'
-                 LIMIT 1"
-            )->fetch_assoc();
-        }
-
-        echo json_encode(['policy' => $row, 'medication' => $med]);
+    // finds patients with more prescriptions than the average for "High-Volume Patients" feature
+    // meets the requirement for Nested Aggregation with Group By
+    case 'high_volume_patients':
+        $result = $conn->query(
+            "SELECT pt.ID, pt.Fname, pt.Lname, COUNT(p.Prescription_ID) AS Prescription_Count
+             FROM patients pt
+             JOIN prescriptions p ON p.Patient_ID = pt.ID
+             GROUP BY pt.ID, pt.Fname, pt.Lname
+             HAVING COUNT(p.Prescription_ID) > ( SELECT AVG(Prescription_Count) FROM (
+                     SELECT COUNT(Prescription_ID) AS Prescription_Count
+                     FROM prescriptions
+                     GROUP BY Patient_ID
+                 ) AS counts
+             )
+             ORDER BY Prescription_Count DESC"
+        );
+        echo json_encode($result->fetch_all(MYSQLI_ASSOC));
         break;
 
-    // ── ALL EMPLOYEES ─────────────────────────────────────────────────────────
-    // Simple SELECT: get all employees sorted by role then last name
+    // delete patients from the database for "Delete Patient" feature
+    // meets the requirement of Delete operation
+    case 'delete_patient':
+        $id = (int)($_GET['id'] ?? 0);
+
+        $patient = $conn->query("SELECT ID, Fname, Lname 
+                                FROM patients 
+                                WHERE ID = $id")->fetch_assoc();
+
+        if (!$patient) { echo json_encode(['error' => "Patient ID $id not found."]); break; }
+
+        $conn->query("DELETE FROM patients WHERE ID = $id");
+
+        echo json_encode(['success' => "Patient {$patient['Fname']} {$patient['Lname']} (ID $id) has been deleted."]);
+        break;
+
+    // update patients' contact information for "Update Patient" feature
+    // meets the requirement of Update operation
+    case 'update_patient':
+        $id    = (int)($_GET['id']    ?? 0);
+        $phone = $conn->real_escape_string($_GET['phone'] ?? '');
+        $email = $conn->real_escape_string($_GET['email'] ?? '');
+        $city  = $conn->real_escape_string($_GET['city']  ?? '');
+
+        $patient = $conn->query("SELECT ID, Fname, Lname 
+                                FROM patients WHERE ID = $id")->fetch_assoc();
+
+        if (!$patient) { echo json_encode(['error' => "Patient ID $id not found."]); break; }
+
+        $conn->query("UPDATE patients 
+                    SET Phone = '$phone', Email = '$email', City = '$city' 
+                    WHERE ID = $id");
+
+        echo json_encode(['success' => "Patient {$patient['Fname']} {$patient['Lname']} updated successfully."]);
+        break;
+
+    // retrieve all employees for "All Employees" features
+    //
     case 'all_employees':
         $result = $conn->query(
-            "SELECT ID, Fname, Lname, Role, Phone, Email
-             FROM employees
-             ORDER BY Role, Lname"
+            "SELECT e.ID, e.Fname, e.Lname, r.RoleName AS Role, e.Phone, e.Email
+             FROM employees e
+             JOIN roles r 
+             ON r.RoleID = e.RoleID
+             ORDER BY r.RoleName, e.Lname"
         );
         echo json_encode($result->fetch_all(MYSQLI_ASSOC));
         break;
