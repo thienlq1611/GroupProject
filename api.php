@@ -203,6 +203,27 @@ switch ($action) {
         );
         echo json_encode($result->fetch_all(MYSQLI_ASSOC));
         break;
+    // -- Aggregation Queries:
+    case 'avg_med_cost':
+    $result = $conn->query(
+        "SELECT AVG(Cost) AS avg_cost
+         FROM medications"
+    );
+
+    echo json_encode($result->fetch_assoc());
+    break;
+
+    case 'prescription_count_per_patient':
+    $result = $conn->query(
+        "SELECT pt.ID, pt.Fname, pt.Lname, COUNT(*) AS total_prescriptions
+         FROM prescriptions p
+         JOIN patients pt ON pt.ID = p.Patient_ID
+         GROUP BY pt.ID, pt.Fname, pt.Lname
+         ORDER BY total_prescriptions DESC"
+    );
+
+    echo json_encode($result->fetch_all(MYSQLI_ASSOC));
+    break;
 
     // ── COVERAGE ELIGIBILITY ──────────────────────────────────────────────────
     // JOIN: joins is_insured and insurance tables to check patient coverage
@@ -284,7 +305,12 @@ switch ($action) {
     default:
         echo json_encode(['error' => "Unknown action: $action"]);
         break;
+
+
+    
 }
+
+
 
 $conn->close();
 ?>
