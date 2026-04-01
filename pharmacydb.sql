@@ -247,7 +247,7 @@ CREATE TABLE Supplied_By (
   VendID INT,
   PRIMARY KEY ( MedID, VendID),
   FOREIGN KEY (MedID) REFERENCES Medications(ID),
-  FOREIGN KEY (VendID) REFERENCES Vendor(VendorID)
+  FOREIGN KEY (VendID) REFERENCES Vendors(VendorID)
 );
 
 -- DATA insertions:
