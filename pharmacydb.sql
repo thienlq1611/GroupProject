@@ -328,7 +328,7 @@ INSERT INTO Medications (Drug_Name, Manufacturer, Strength, Cost, DIN, Qty_per_u
 ('Lactase Enzyme', 'Kirkland', '9000 FCC units capsule', 18.99, 10000012, 35, 600), 
 ('Diphenhydramine (Benedryl)', 'Kenvue Inc', '25mg tablet', 9.99, 10000013, 20, 300),
 ('Lisinopril', 'Mylan', '50mg tablet', 20.49, 10000435, 16, 261), 
-('Lisinopril', 'Mylan', '100mg tablet', 30.49, 10012435, 16, 261),
+('Lisinopril', 'Mylan', '100mg tablet', 30.49, 10012435, 16, 261);
 
 
 INSERT INTO Prescriptions (Instructions, Refills, Date_Issued, Expiry_Date, Patient_ID) VALUES 
