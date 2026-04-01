@@ -445,7 +445,6 @@ INSERT INTO Supplied_By (MedID, VendID) VALUES
 (14,2),
 (13,2),
 (7,2),
-(1,2),
 (1,3),
 (2,3),
 (3,3),
