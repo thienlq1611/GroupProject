@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 // Connect to database
-$conn = new mysqli('127.0.0.1', 'root', 'Top@2805961155', 'pharmacydb');
+$conn = new mysqli('127.0.0.1', 'root', 'root', 'pharmacydb');
 if ($conn->connect_error) {
     http_response_code(500);
     echo json_encode(['error' => 'Connection failed: ' . $conn->connect_error]);
